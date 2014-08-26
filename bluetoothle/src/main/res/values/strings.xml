@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    
+    <string name="select_device">选择设备</string>
+ 	<string name="app_name">BLE调试</string>
+    <string name="ble_not_supported">您的设备不支持BLE.</string>
+    <string name="label_data">数据:</string>
+    <string name="label_device_address">设备地址:</string>
+    <string name="label_state">状态:</string>
+    <string name="no_data">无数据</string>
+    <string name="connected">已连接</string>
+    <string name="disconnected">已断开</string>
+    <string name="title_devices">搜索BLE设备</string>
+    <string name="error_bluetooth_not_supported">您的设备不支持蓝牙.</string>
+	<string name="scan_not_found">未搜索到设备</string>
+    <string name="unknown_device">Unknown device</string>
+    <string name="unknown_characteristic">Unknown characteristic</string>
+    <string name="unknown_service">Unknown service</string>
+
+    <!-- Menu items -->
+    <string name="menu_connect">连接</string>
+    <string name="menu_disconnect">断开</string>
+    <string name="menu_scan">搜索</string>
+    <string name="menu_stop">停止</string>
+    
+    
+    <string name="sending_request">正在发送请求</string>
+    <string name="reading_data">读取中</string>
+    <string name="syncing">正在同步</string>
+    <string name="disconnected_toast">连接已断开</string>
+    <string name="exit_confirm">再按一次，确认退出</string>
+    <string name="station_setting">基站设置</string>
+    <string name="device_setting">设备设置</string>
+    <string name="label_device_name">设备名称:</string>
+    <string name="label_server_IP">服务器IP:</string>
+    <string name="label_server_port">端口:</string>
+    <string name="label_station_state">基站状态:</string>
+    <string name="label_station_place">位置:</string>
+    <string name="label_station_remark">备注:</string>
+    
+    <string name="label_device_connection">连接状态:</string>
+    <string name="label_device_id">设备ID:</string>
+    <string name="label_device_time">设备时间:</string>
+    <string name="label_device_sum">设备数量:</string>
+    
+    <string name="tip_invalid">缺少必要信息</string>
+    
+    <string name="tip_noid">设备ID不可为空</string>
+    <string name="tip_nosum">设备数量不可为空</string>
+    <string name="tip_submit_ok">同步成功</string>
+    <string name="tip_submit_fail">同步失败，请重试</string>
+     
+    
+    <string name="button_submit">设置</string>
+    <string name="button_read">刷新</string>
+    <string name="button_sync">同步</string>
+    <string name="ok">确定</string>
+    <string name="cancel">取消</string>
+    <string name="submit_confirm">确认设置？</string>
+    <string name="ip_none">未填入IP地址</string>
+    <string name="port_none">未填入端口</string>
+    <string name="ip_error">IP错误</string>
+    <string name="port_error">端口错误</string>
+    
+</resources>

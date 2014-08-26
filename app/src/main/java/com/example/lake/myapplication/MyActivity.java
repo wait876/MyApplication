@@ -33,4 +33,9 @@ public class MyActivity extends Activity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+    public void myFunction()
+    {
+
+    }
 }
