@@ -1,1 +1,1 @@
-include ':app', ':bluetoothle'
+include ':app', ':bluetoothle', ':navigationdrawdemo'
