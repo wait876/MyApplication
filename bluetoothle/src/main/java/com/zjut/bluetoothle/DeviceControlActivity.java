@@ -47,6 +47,10 @@ import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Date;
@@ -92,6 +96,9 @@ public class DeviceControlActivity extends Activity {
     private Handler tipHandler=new Handler();
     private long startTime;
     private long endTime;
+
+    private File file=null;
+    private File dir=null;
     
     /*private EditText deviceNameEditText;
     private EditText serverIPEditText;
@@ -220,10 +227,30 @@ public class DeviceControlActivity extends Activity {
                 ExerciseData exerciseData=(ExerciseData) intent.getSerializableExtra(BluetoothLeService.MY_EXTRA_DATA);
                 if (exerciseData.getIsEmpty()) {
                     closeRequestDialog();
+
+                    dir=new File(android.os.Environment.getExternalStorageDirectory() + "/BLE");
+                    if (!dir.exists())
+                        dir.mkdir();
+                    file=new File(android.os.Environment.getExternalStorageDirectory() + "/BLE/"+TimeHelper.getDatetime()+".txt");
+                    try {
+                        FileOutputStream fileOutputStream=new FileOutputStream(file, true);
+                        fileOutputStream.write(syncStringBuilder.toString().getBytes());
+                        fileOutputStream.close();
+
+                    } catch (FileNotFoundException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+
+
                     endTime=new Date().getTime();
                     ShowToastShort("同步完成"+syncCounts);
                     syncStringBuilder.insert(0, "共"+syncCounts+"组数据，耗时 "+(endTime-startTime)+" ms\r\n");
                     syncDataTextView.setText(syncStringBuilder.toString());
+
 
                 }
                 else

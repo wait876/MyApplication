@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="Category1">
+        <CheckBoxPreference
+            android:title="CheckBox"
+            android:defaultValue="false"
+            android:summary="True or False"
+            android:key="checkboxPref"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Category2">
+        <EditTextPreference
+            android:summary="Enter a string"
+            android:defaultValue="[Enter a string here]"
+            android:title="Enter a string"
+            android:key="editTextPref"/>
+
+    </PreferenceCategory>
+</PreferenceScreen>

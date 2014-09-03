@@ -40,6 +40,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -102,6 +106,24 @@ public class DeviceScanActivity extends ListActivity {
             menu.findItem(R.id.menu_refresh).setActionView(
                     R.layout.actionbar_indeterminate_progress);
         }
+
+        /*File dir=new File(android.os.Environment.getExternalStorageDirectory() + "/BLE");
+        if (!dir.exists())
+            dir.mkdir();
+        File file=new File(android.os.Environment.getExternalStorageDirectory() + "/BLE/"+TimeHelper.getDatetime()+".txt");
+        try {
+            FileOutputStream fileOutputStream=new FileOutputStream(file, true);
+            fileOutputStream.write(TimeHelper.dateToSecond().getBytes());
+            fileOutputStream.close();
+
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }*/
+
         return true;
     }
 

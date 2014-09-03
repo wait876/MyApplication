@@ -6,8 +6,14 @@ import java.util.Date;
 
 public class TimeHelper {
     static SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    static SimpleDateFormat sdf2=new SimpleDateFormat("yyyyMMddHHmmss");
     private static Date baseData=new Date(100,0,1,0,0,0);
     private static Date targetData=null;
+
+    public static String getDatetime()
+    {
+        return sdf2.format(new Date());
+    }
 
     public static String secondToDate(long second)
     {
