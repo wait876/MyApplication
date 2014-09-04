@@ -1,0 +1,28 @@
+package list;
+
+public class DuLinkList<T> {
+	private class Node
+	{
+		private T data;
+		private Node prev;
+		private Node next;
+		public Node()
+		{}
+		public Node(T data,Node prev,Node next)
+		{
+			this.data=data;
+			this.prev=prev;
+			this.next=next;
+		}
+	}
+	
+	private Node header;
+	private Node tail;
+	private int size;
+	public DuLinkList()
+	{
+		header=null;
+		tail=null;
+	}
+	public DuLinkList(T element)
+	{
