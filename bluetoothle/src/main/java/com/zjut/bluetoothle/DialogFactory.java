@@ -31,13 +31,12 @@ public class DialogFactory {
     }
 
 	/*public static void ToastDialog(Context context, String title, String msg) {
-		new AlertDialog.Builder(context).setTitle(title).setMessage(msg)
+        new AlertDialog.Builder(context).setTitle(title).setMessage(msg)
 				.setPositiveButton("确定", null).create().show();
 	}*/
 
     //不带bar的提示框
-    public static Dialog createToastDialog(final Context context, String tip)
-    {
+    public static Dialog createToastDialog(final Context context, String tip) {
         final Dialog dialog = new Dialog(context, R.style.dialog);
         dialog.setContentView(R.layout.layout_toast);
         Window window = dialog.getWindow();

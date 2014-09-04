@@ -139,6 +139,6 @@
     <color name="setting_text2">#ff798089</color>
     <color name="setting_bg">#ffe3e6e8</color>
     <color name="transparent">#FFFFFFFF</color>
-	<color name="activity_background">#eee</color>
-	<color name="unavailable">#ffc8cdd0</color>
+    <color name="activity_background">#eee</color>
+    <color name="unavailable">#ffc8cdd0</color>
 </resources>
