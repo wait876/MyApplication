@@ -2,11 +2,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content">
 
         <TextView
             android:id="@+id/textView1"
@@ -25,64 +25,70 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ems="10" >
+            android:ems="10">
 
-            <requestFocus />
+        <requestFocus />
         </EditText>
 
     </LinearLayout>
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_height="fill_parent"
+        android:orientation="vertical">
 
         <TextView
+            android:id="@+id/tv_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="counts:"
-            android:id="@+id/tv_count" />
+            android:text="counts:" />
 
         <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:id="@+id/et_id"
-            android:hint="PersonID"
-            android:singleLine="true"
-            android:inputType="number" />
-
-        <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:hint="PersonID"
+            android:inputType="number"
+            android:singleLine="true" />
+
+        <EditText
             android:id="@+id/et_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:hint="Name"
             android:singleLine="true" />
 
         <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:id="@+id/et_age"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:hint="Age"
-            android:singleLine="true"
-            android:inputType="number" />
+            android:inputType="number"
+            android:singleLine="true" />
 
         <Button
+            android:id="@+id/bt_save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Save"
-            android:id="@+id/bt_save" />
+            android:text="Save" />
 
         <Button
+            android:id="@+id/bt_find"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Find"
-            android:id="@+id/bt_find" />
+            android:text="Find" />
 
         <Button
+            android:id="@+id/bt_show"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Show"
-            android:id="@+id/bt_show" />
+            android:text="Show" />
+
+        <Button
+            android:id="@+id/bt_thread"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Thread" />
 
     </LinearLayout>
 

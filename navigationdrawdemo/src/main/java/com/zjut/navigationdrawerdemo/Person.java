@@ -12,12 +12,13 @@ public class Person {
     private String email;
     private Boolean available;
 
-    public Person(){}
-    public Person(int id, String name, int age)
-    {
-        this.id=id;
-        this.name=name;
-        this.age=age;
+    public Person() {
+    }
+
+    public Person(int id, String name, int age) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
 
     }
 
