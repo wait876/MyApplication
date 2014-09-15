@@ -40,7 +40,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+
 import static com.zjut.bluetoothle.Constants.*;
+
 /**
  * Service for managing connection and data communication with a GATT server hosted on a
  * given Bluetooth LE device.
@@ -175,7 +177,7 @@ public class BluetoothLeService extends Service {
                 boolean writeBoolean = mBluetoothGatt.writeCharacteristic(characteristic);
                 intent.putExtra(MY_EXTRA_DATA, String.valueOf(writeBoolean));
                  /*characteristic.setValue(10000, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
-             	mBluetoothGatt.writeCharacteristic(characteristic);
+                 mBluetoothGatt.writeCharacteristic(characteristic);
              	int second=0;
              	second=characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 0);
              	Log.i(TAG, String.valueOf(second)+"ljpSecond2");
@@ -193,10 +195,10 @@ public class BluetoothLeService extends Service {
                     exerciseDataArrayList.add(exerciseData);
                     myReadCharacteristic(allCharacteristics.get("exerciseData"));
                     isSysnDone = false;
-                    /*try {
-                        file = new File(android.os.Environment.getExternalStorageDirectory() + "/BLE/" +exerciseData.getDevice_id()+"_backup" + ".txt");
+                    try {
+                        file = new File(android.os.Environment.getExternalStorageDirectory() + "/BLE/" + exerciseData.getDevice_id() + "_backup" + ".txt");
                         FileOutputStream fileOutputStream = new FileOutputStream(file, true);
-                        fileOutputStream.write((exerciseData.toString()+"\r\n").getBytes());
+                        fileOutputStream.write((exerciseData.toString() + "\r\n").getBytes());
                         fileOutputStream.close();
 
                     } catch (FileNotFoundException e) {
@@ -205,7 +207,7 @@ public class BluetoothLeService extends Service {
                     } catch (IOException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
-                    }*/
+                    }
                 } else {
                     exerciseDataArrayList.trimToSize();
                     intent.putExtra("ArrayList", exerciseDataArrayList);
@@ -345,11 +347,10 @@ public class BluetoothLeService extends Service {
      * Connects to the GATT server hosted on the Bluetooth LE device.
      *
      * @param address The device address of the destination device.
-     *
      * @return Return true if the connection is initiated successfully. The connection result
-     *         is reported asynchronously through the
-     *         {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
-     *         callback.
+     * is reported asynchronously through the
+     * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
+     * callback.
      */
     public boolean connect(final String address) {
         if (mBluetoothAdapter == null || address == null) {
@@ -443,7 +444,7 @@ public class BluetoothLeService extends Service {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
-        myMethod=true;
+        myMethod = true;
         //Constants.isWrite=true;
         this.settings = settings;
         mBluetoothGatt.readCharacteristic(characteristic);
@@ -508,14 +509,13 @@ public class BluetoothLeService extends Service {
 
     public String exerciseDataHelper(byte[] values) {
         String[] strings = new String[16];
-        for(int i=0;i<values.length;i++)
-        {
-            int temp=values[i];
-            if (temp<0) {
-                temp=temp+256;
+        for (int i = 0; i < values.length; i++) {
+            int temp = values[i];
+            if (temp < 0) {
+                temp = temp + 256;
             }
             // 小于10时，需要在前边补0！
-            strings[i]=insertZero(Constants.toHEXString(String.valueOf(temp)), 2);
+            strings[i] = insertZero(Constants.toHEXString(String.valueOf(temp)), 2);
         }
         String data_time = strings[3] + strings[2] + strings[1] + strings[0];
         data_time = TimeHelper.minuteToDate(toValueString(data_time));
@@ -531,17 +531,15 @@ public class BluetoothLeService extends Service {
         return data_time + "_" + device_id + "_" + data_energy + "_" + counts1 + "_" + counts2 + "_" + counts3 + "_" + counts4;
     }
 
-    public ExerciseData getExerciseData(byte[] values)
-    {
-        String[] strings=new String[16];
-        for(int i=0;i<values.length;i++)
-        {
-            int temp=values[i];
-            if (temp<0) {
-                temp=temp+256;
+    public ExerciseData getExerciseData(byte[] values) {
+        String[] strings = new String[16];
+        for (int i = 0; i < values.length; i++) {
+            int temp = values[i];
+            if (temp < 0) {
+                temp = temp + 256;
             }
             // 小于10时，需要在前边补0！
-            strings[i]=insertZero(Constants.toHEXString(String.valueOf(temp)), 2);
+            strings[i] = insertZero(Constants.toHEXString(String.valueOf(temp)), 2);
         }
         ExerciseData exerciseData = new ExerciseData(
                 TimeHelper.minuteToDate(toValueString(strings[3] + strings[2] + strings[1] + strings[0])),
