@@ -72,11 +72,11 @@ import static com.zjut.bluetoothle.Constants.*;
  * Bluetooth LE API.
  */
 public class DeviceControlActivity extends Activity {
-    private final static String TAG = "DeviceControlActivity";//DeviceControlActivity
-
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
-
+    private final static String TAG = "DeviceControlActivity";//DeviceControlActivity
+    private final String LIST_NAME = "NAME";
+    private final String LIST_UUID = "UUID";
     private EditText testEditText;
     private Button testButton;
     private HashMap<String, BluetoothGattCharacteristic> allCharacteristics;
@@ -86,182 +86,6 @@ public class DeviceControlActivity extends Activity {
     private String mDeviceAddress;
     private ExpandableListView mGattServicesList;	//ServicesList
     private BluetoothLeService mBluetoothLeService;	//BLE服务
-    private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
-            new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
-    private boolean mConnected = false;
-    private BluetoothGattCharacteristic mNotifyCharacteristic;
-
-    private final String LIST_NAME = "NAME";
-    private final String LIST_UUID = "UUID";
-
-    private Dialog mDialog;
-    private Handler tipHandler=new Handler();
-    private long startTime;
-    private long endTime;
-
-    private File file=null;
-    private File dir=null;
-    
-    /*private EditText deviceNameEditText;
-    private EditText serverIPEditText;
-    private EditText serverPortEditText;
-    private String serverIPString;
-    private String serverPortString;
-    private int serverPort;*/
-
-    private EditText deviceIdEditText;
-    //private EditText deviceTimeEditText;
-    private TextView deviceTimeTextView;
-    private EditText deviceSumEditText;
-
-    private String[] newSettingStrings=null;
-    private Button submitButton;
-    private Button readButton;
-    private Button syncButton;
-    private int syncCounts;
-    private Handler syncHandler;
-    private SyncThread syncThread=null;
-    private StringBuilder syncStringBuilder=null;
-    private TextView syncDataTextView;
-    private PowerManager powerManager=null;
-    private PowerManager.WakeLock wakeLock=null;
-
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.gatt_services_characteristics);
-
-        this.initView();
-        //服务列表
-        mGattServicesList = (ExpandableListView) findViewById(R.id.gatt_services_list);
-        mGattServicesList.setOnChildClickListener(servicesListClickListner);
-        //mGattServicesList.setVisibility(View.GONE);
-        getActionBar().setTitle(getResources().getString(R.string.device_setting));
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-
-        //绑定服务
-        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
-    }
-
-    private void initView()
-    {
-        final Intent intent = getIntent();
-        mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
-        mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
-
-        // Sets up UI references.
-        ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
-        mConnectionState = (TextView) findViewById(R.id.connection_state);
-        mDataField = (TextView) findViewById(R.id.data_value);
-
-        dir=new File(android.os.Environment.getExternalStorageDirectory() + "/BLE");
-        if (!dir.exists())
-            dir.mkdir();
-        powerManager=(PowerManager)getSystemService(Context.POWER_SERVICE);
-        wakeLock=powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, "WAKE");
-
-
-        /*deviceNameEditText=(EditText)findViewById(R.id.editText_device_name);
-        deviceNameEditText.setText(mDeviceName);
-        serverIPEditText=(EditText)findViewById(R.id.editText_serverIP);
-        serverIPEditText.setText("115.238.44.116");
-        serverPortEditText=(EditText)findViewById(R.id.editText_serverPort);
-        serverPortEditText.setText("1234");*/
-        deviceIdEditText=(EditText)this.findViewById(R.id.editText_device_id);
-        deviceSumEditText=(EditText)this.findViewById(R.id.editText_device_sum);
-        deviceTimeTextView=(TextView)this.findViewById(R.id.device_time);
-        syncDataTextView=(TextView)this.findViewById(R.id.exerciseDataTextview);
-        testEditText=(EditText)findViewById(R.id.editText1);
-        testButton=(Button)findViewById(R.id.testBtuuon);
-        testButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //testButton.setEnabled(false);
-                // TODO Auto-generated method stub
-                //ShowToastShort();
-				/*for (ArrayList<BluetoothGattCharacteristic> mGattCharacteristic : mGattCharacteristics) {
-					for (BluetoothGattCharacteristic bluetoothGattCharacteristic : mGattCharacteristic) {
-						Log.i(TAG, SampleGattAttributes.lookup(bluetoothGattCharacteristic.getUuid().toString(), "unknown")+"ljp");
-					}
-				}*/
-
-				/*BluetoothGattCharacteristic testBluetoothGattCharacteristic= mGattCharacteristics.get(2).get(1);
-				mBluetoothLeService.myReadCharacteristic(testBluetoothGattCharacteristic);*/
-                Iterator iterator=allCharacteristics.entrySet().iterator();
-                while (iterator.hasNext()) {
-                    Map.Entry entry = (Map.Entry) iterator.next();
-                    Log.i(TAG, entry.getKey()+"ljp");
-                }
-                //mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("Serial Number"));
-
-            }
-        });
-
-        readButton=(Button)findViewById(R.id.button_read);
-        readButton.setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                // TODO Auto-generated method stub
-                showRequestDialog(getResources().getString(R.string.reading_data));
-                mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("setting"));
-                operationType=READ_DEVICE;
-                //ShowToastShort("READing");
-            }
-        });
-
-        submitButton=(Button)findViewById(R.id.button_submit);
-        submitButton.setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                // TODO Auto-generated method stub
-                if (checkValid()) {
-                    new AlertDialog.Builder(DeviceControlActivity.this).setTitle(getResources().getString(R.string.submit_confirm))
-                            .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface arg0, int arg1) {
-                                    // TODO Auto-generated method stub
-
-                                    byte[] settings=generateNewSetting();
-
-                                    mBluetoothLeService.myWriteCharacteristic(allCharacteristics.get("setting"), settings);
-                                    operationType=SET_DEVICE;
-                                    //mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("setting"));
-                                    //ShowToastShort("SUBMIT");
-                                }
-                            }).setNegativeButton(getResources().getString(R.string.cancel), null).show();
-                }
-
-            }
-        });
-
-        syncButton=(Button)findViewById(R.id.button_sync);
-        syncButton.setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                // TODO Auto-generated method stub
-                showRequestDialog(getResources().getString(R.string.syncing));
-                mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("exerciseData"));
-                operationType=SYNC_DEVICE;
-                syncCounts=0;
-                syncHandler=new Handler();
-                syncThread=new SyncThread();
-                syncStringBuilder=new StringBuilder();
-
-                startTime=new Date().getTime();
-                wakeLock.acquire();
-                file=new File(android.os.Environment.getExternalStorageDirectory() + "/BLE/"+TimeHelper.getDatetime()+".txt");
-            }
-        });
-    }
-
-
-
-
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
@@ -284,7 +108,77 @@ public class DeviceControlActivity extends Activity {
             mBluetoothLeService = null;
         }
     };
+    private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
+            new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
+    private boolean mConnected = false;
+    private BluetoothGattCharacteristic mNotifyCharacteristic;
+    // If a given GATT characteristic is selected, check for supported features.  This sample
+    // demonstrates 'Read' and 'Notify' features.  See
+    // http://d.android.com/reference/android/bluetooth/BluetoothGatt.html for the complete
+    // list of supported characteristic features.
+    private final ExpandableListView.OnChildClickListener servicesListClickListner =
+            new ExpandableListView.OnChildClickListener() {
+                @Override
+                public boolean onChildClick(ExpandableListView parent, View v, int groupPosition,
+                                            int childPosition, long id) {
+                    if (mGattCharacteristics != null) {
+                        final BluetoothGattCharacteristic characteristic =
+                                mGattCharacteristics.get(groupPosition).get(childPosition);
+                        final int charaProp = characteristic.getProperties();
 
+                        Log.i(TAG, String.valueOf(charaProp) + "LJP");
+
+                        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
+                            // 2
+                            // If there is an active notification on a characteristic, clear
+                            // it first so it doesn't update the data field on the user interface.
+                            if (mNotifyCharacteristic != null) {
+                                mBluetoothLeService.setCharacteristicNotification(
+                                        mNotifyCharacteristic, false);
+                                mNotifyCharacteristic = null;
+                            }
+                            // 读取属性
+                            mBluetoothLeService.readCharacteristic(characteristic);
+                            Log.i(TAG, "Readljp");
+                        }
+                        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+                            // 16
+                            mNotifyCharacteristic = characteristic;
+                            mBluetoothLeService.setCharacteristicNotification(characteristic, true);
+                            Log.i(TAG, "Notifyljp");
+                        }
+                        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_WRITE) > 0) {
+                            // 8
+                            Log.i(TAG, "Writeljp");
+                        }
+                        displayData(getResources().getString(R.string.no_data));
+                        return true;
+                    }
+                    return false;
+                }
+            };
+    private Dialog mDialog;
+    private Handler tipHandler=new Handler();
+    private long startTime;
+    private long endTime;
+    
+    /*private EditText deviceNameEditText;
+    private EditText serverIPEditText;
+    private EditText serverPortEditText;
+    private String serverIPString;
+    private String serverPortString;
+    private int serverPort;*/
+    private File file = null;
+    private File dir = null;
+    private EditText deviceIdEditText;
+    //private EditText deviceTimeEditText;
+    private TextView deviceTimeTextView;
+    private EditText deviceSumEditText;
+    private String[] newSettingStrings=null;
+    private Button submitButton;
+    private Button readButton;
+    private Button syncButton;
+    private int syncCounts;
     // 接收到广播之后的响应
     // Handles various events fired by the Service.
     // ACTION_GATT_CONNECTED: connected to a GATT server.
@@ -324,7 +218,7 @@ public class DeviceControlActivity extends Activity {
                 //mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("Serial Number"));
                 // 读取设置
                 mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("setting"));
-                operationType=READ_DEVICE;
+                operationType = READ_DEVICE;
                 // 读取运动数据
                 //mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("exerciseData"));
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
@@ -336,19 +230,18 @@ public class DeviceControlActivity extends Activity {
                 Log.i(TAG, "READ_ACTION-ljp");
                 // ShowToastShort(intent.getStringExtra(BluetoothLeService.MY_EXTRA_DATA));
                 String tempString = intent.getStringExtra(BluetoothLeService.MY_EXTRA_DATA);
-                String[] strings=tempString.split("_");
+                String[] strings = tempString.split("_");
                 deviceIdEditText.setText(strings[0]);
                 deviceTimeTextView.setText(strings[1]);
                 deviceSumEditText.setText(strings[2]);
                 //testEditText.setText(tempString);
-				/*
+                /*
 				 * String arrayString[]=tempString.split("-"); for (String
 				 * string : arrayString) { ShowToastShort(string); }
 				 */
                 //testButton.setEnabled(true);
 
-            }
-            else if (BluetoothLeService.SET_ACTION.equals(action)){
+            } else if (BluetoothLeService.SET_ACTION.equals(action)) {
                 closeRequestDialog();
                 String tempString = intent.getStringExtra(BluetoothLeService.MY_EXTRA_DATA);
                 if (tempString.equals("true")) {
@@ -356,35 +249,32 @@ public class DeviceControlActivity extends Activity {
                     deviceIdEditText.setText(newSettingStrings[0]);
                     deviceTimeTextView.setText(newSettingStrings[1]);
                     deviceSumEditText.setText(newSettingStrings[2]);
-                }
-                else {
+                } else {
                     showToastDialog(DeviceControlActivity.this, getResources().getString(R.string.tip_submit_fail));
                 }
-            }else if (BluetoothLeService.SYNC_ACTION.equals(action)) {
+            } else if (BluetoothLeService.SYNC_ACTION.equals(action)) {
 
                 //Log.i(TAG, "SYNC_ACTION-ljp");
                 // ShowToastShort(intent.getStringExtra(BluetoothLeService.MY_EXTRA_DATA));
                 //String tempString = intent.getStringExtra(BluetoothLeService.MY_EXTRA_DATA);
-                ExerciseData exerciseData=(ExerciseData) intent.getSerializableExtra(BluetoothLeService.MY_EXTRA_DATA);
+                ExerciseData exerciseData = (ExerciseData) intent.getSerializableExtra(BluetoothLeService.MY_EXTRA_DATA);
                 if (exerciseData.getIsEmpty()) {
                     closeRequestDialog();
 
-                    endTime=new Date().getTime();
-                    ShowToastShort("同步完成"+syncCounts);
-                    syncStringBuilder.insert(0, "共"+syncCounts+"组数据，耗时 "+(endTime-startTime)+" ms\r\n");
+                    endTime = new Date().getTime();
+                    ShowToastShort("同步完成" + syncCounts);
+                    syncStringBuilder.insert(0, "共" + syncCounts + "组数据，耗时 " + (endTime - startTime) + " ms\r\n");
                     syncDataTextView.setText(syncStringBuilder.toString());
                     wakeLock.release();
 
-                }
-                else
-                {
+                } else {
                     //Log.i(TAG, exerciseData.toString());
                     syncStringBuilder.append(exerciseData.toString()).append("\r\n");
                     syncCounts++;
                     //syncHandler.post(syncThread);
 
                     try {
-                        FileOutputStream fileOutputStream=new FileOutputStream(file, false);
+                        FileOutputStream fileOutputStream = new FileOutputStream(file, false);
                         fileOutputStream.write(syncStringBuilder.toString().getBytes());
                         fileOutputStream.close();
 
@@ -407,67 +297,156 @@ public class DeviceControlActivity extends Activity {
 
         }
     };
+    private Handler syncHandler;
+    private SyncThread syncThread = null;
+    private StringBuilder syncStringBuilder = null;
+    private TextView syncDataTextView;
+    private PowerManager powerManager = null;
+    private PowerManager.WakeLock wakeLock = null;
 
-
-    class SyncThread extends Thread
-    {
-        @Override
-        public void run() {
-            // TODO Auto-generated method stub
-            super.run();
-            //Log.i(TAG, "syncThread");
-            mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("exerciseData"));
-            operationType=SYNC_DEVICE;
-        }
+    //指定IntentFilter
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.READ_ACTION);
+        intentFilter.addAction(BluetoothLeService.SET_ACTION);
+        intentFilter.addAction(BluetoothLeService.SYNC_ACTION);
+        return intentFilter;
     }
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.gatt_services_characteristics);
+
+        this.initView();
+        //服务列表
+        mGattServicesList = (ExpandableListView) findViewById(R.id.gatt_services_list);
+        mGattServicesList.setOnChildClickListener(servicesListClickListner);
+        //mGattServicesList.setVisibility(View.GONE);
+        getActionBar().setTitle(getResources().getString(R.string.device_setting));
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+
+        //绑定服务
+        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
+        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+    }
+
+    private void initView() {
+        final Intent intent = getIntent();
+        mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
+        mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
+
+        // Sets up UI references.
+        ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
+        mConnectionState = (TextView) findViewById(R.id.connection_state);
+        mDataField = (TextView) findViewById(R.id.data_value);
+
+        dir = new File(android.os.Environment.getExternalStorageDirectory() + "/BLE");
+        if (!dir.exists())
+            dir.mkdir();
+        powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, "WAKE");
 
 
-    // If a given GATT characteristic is selected, check for supported features.  This sample
-    // demonstrates 'Read' and 'Notify' features.  See
-    // http://d.android.com/reference/android/bluetooth/BluetoothGatt.html for the complete
-    // list of supported characteristic features.
-    private final ExpandableListView.OnChildClickListener servicesListClickListner =
-            new ExpandableListView.OnChildClickListener() {
-                @Override
-                public boolean onChildClick(ExpandableListView parent, View v, int groupPosition,
-                                            int childPosition, long id) {
-                    if (mGattCharacteristics != null) {
-                        final BluetoothGattCharacteristic characteristic =
-                                mGattCharacteristics.get(groupPosition).get(childPosition);
-                        final int charaProp = characteristic.getProperties();
+        /*deviceNameEditText=(EditText)findViewById(R.id.editText_device_name);
+        deviceNameEditText.setText(mDeviceName);
+        serverIPEditText=(EditText)findViewById(R.id.editText_serverIP);
+        serverIPEditText.setText("115.238.44.116");
+        serverPortEditText=(EditText)findViewById(R.id.editText_serverPort);
+        serverPortEditText.setText("1234");*/
+        deviceIdEditText = (EditText) this.findViewById(R.id.editText_device_id);
+        deviceSumEditText = (EditText) this.findViewById(R.id.editText_device_sum);
+        deviceTimeTextView = (TextView) this.findViewById(R.id.device_time);
+        syncDataTextView = (TextView) this.findViewById(R.id.exerciseDataTextview);
+        testEditText = (EditText) findViewById(R.id.editText1);
+        testButton = (Button) findViewById(R.id.testBtuuon);
+        testButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //testButton.setEnabled(false);
+                // TODO Auto-generated method stub
+                //ShowToastShort();
+                /*for (ArrayList<BluetoothGattCharacteristic> mGattCharacteristic : mGattCharacteristics) {
+					for (BluetoothGattCharacteristic bluetoothGattCharacteristic : mGattCharacteristic) {
+						Log.i(TAG, SampleGattAttributes.lookup(bluetoothGattCharacteristic.getUuid().toString(), "unknown")+"ljp");
+					}
+				}*/
 
-                        Log.i(TAG, String.valueOf(charaProp)+"LJP");
-
-                        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-                            // 2
-                            // If there is an active notification on a characteristic, clear
-                            // it first so it doesn't update the data field on the user interface.
-                            if (mNotifyCharacteristic != null) {
-                                mBluetoothLeService.setCharacteristicNotification(
-                                        mNotifyCharacteristic, false);
-                                mNotifyCharacteristic = null;
-                            }
-                            // 读取属性
-                            mBluetoothLeService.readCharacteristic(characteristic);
-                            Log.i(TAG, "Readljp");
-                        }
-                        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
-                            // 16
-                            mNotifyCharacteristic = characteristic;
-                            mBluetoothLeService.setCharacteristicNotification(characteristic, true);
-                            Log.i(TAG, "Notifyljp");
-                        }
-                        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_WRITE) > 0) {
-                            // 8
-                            Log.i(TAG, "Writeljp");
-                        }
-                        displayData(getResources().getString(R.string.no_data));
-                        return true;
-                    }
-                    return false;
+				/*BluetoothGattCharacteristic testBluetoothGattCharacteristic= mGattCharacteristics.get(2).get(1);
+				mBluetoothLeService.myReadCharacteristic(testBluetoothGattCharacteristic);*/
+                Iterator iterator = allCharacteristics.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry entry = (Map.Entry) iterator.next();
+                    Log.i(TAG, entry.getKey() + "ljp");
                 }
-            };
+                //mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("Serial Number"));
+
+            }
+        });
+
+        readButton = (Button) findViewById(R.id.button_read);
+        readButton.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                showRequestDialog(getResources().getString(R.string.reading_data));
+                mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("setting"));
+                operationType = READ_DEVICE;
+                //ShowToastShort("READing");
+            }
+        });
+
+        submitButton = (Button) findViewById(R.id.button_submit);
+        submitButton.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                if (checkValid()) {
+                    new AlertDialog.Builder(DeviceControlActivity.this).setTitle(getResources().getString(R.string.submit_confirm))
+                            .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface arg0, int arg1) {
+                                    // TODO Auto-generated method stub
+
+                                    byte[] settings = generateNewSetting();
+
+                                    mBluetoothLeService.myWriteCharacteristic(allCharacteristics.get("setting"), settings);
+                                    operationType = SET_DEVICE;
+                                    //mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("setting"));
+                                    //ShowToastShort("SUBMIT");
+                                }
+                            }).setNegativeButton(getResources().getString(R.string.cancel), null).show();
+                }
+
+            }
+        });
+
+        syncButton = (Button) findViewById(R.id.button_sync);
+        syncButton.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                showRequestDialog(getResources().getString(R.string.syncing));
+                mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("exerciseData"));
+                operationType = SYNC_DEVICE;
+                syncCounts = 0;
+                syncHandler = new Handler();
+                syncThread = new SyncThread();
+                syncStringBuilder = new StringBuilder();
+
+                startTime = new Date().getTime();
+                wakeLock.acquire();
+                file = new File(android.os.Environment.getExternalStorageDirectory() + "/BLE/" + TimeHelper.getDatetime() + ".txt");
+            }
+        });
+    }
 
     // 断开连接后，清除列表
     private void clearUI() {
@@ -612,27 +591,13 @@ public class DeviceControlActivity extends Activity {
         mGattServicesList.setAdapter(gattServiceAdapter);
     }
 
-    //指定IntentFilter
-    private static IntentFilter makeGattUpdateIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
-        intentFilter.addAction(BluetoothLeService.READ_ACTION);
-        intentFilter.addAction(BluetoothLeService.SET_ACTION);
-        intentFilter.addAction(BluetoothLeService.SYNC_ACTION);
-        return intentFilter;
-    }
-
-    public void ShowToastShort(String string)
-    {
+    public void ShowToastShort(String string) {
         Toast.makeText(this, string, Toast.LENGTH_SHORT).show();
     }
 
-    private void showToastDialog(Context context,String tipString)
+    private void showToastDialog(Context context, String tipString)
     {
-        mDialog=DialogFactory.createToastDialog(context, tipString);
+        mDialog = DialogFactory.createToastDialog(context, tipString);
         mDialog.show();
 
         tipHandler.postDelayed(new Runnable() {
@@ -640,10 +605,9 @@ public class DeviceControlActivity extends Activity {
             @Override
             public void run() {
                 // TODO Auto-generated method stub
-                if(mDialog!=null)
-                {
+                if (mDialog != null) {
                     mDialog.dismiss();
-                    mDialog=null;
+                    mDialog = null;
 
                 }
             }
@@ -651,8 +615,7 @@ public class DeviceControlActivity extends Activity {
     }
 
     private void showRequestDialog(String string) {
-        if (mDialog != null)
-        {
+        if (mDialog != null) {
             mDialog.dismiss();
             mDialog = null;
         }
@@ -661,8 +624,7 @@ public class DeviceControlActivity extends Activity {
         mDialog.show();
     }
 
-    private void closeRequestDialog()
-    {
+    private void closeRequestDialog() {
         if (mDialog != null)
         {
             mDialog.dismiss();
@@ -670,16 +632,16 @@ public class DeviceControlActivity extends Activity {
         }
     }
 
-    //检查输入的合法性 
+    //检查输入的合法性
     private boolean checkValid()
     {
 
-        if (deviceIdEditText.length()==0 ) {
+        if (deviceIdEditText.length() == 0) {
             showToastDialog(DeviceControlActivity.this, getResources().getString(R.string.tip_noid));
             return false;
         }
 
-        if (deviceSumEditText.length()==0) {
+        if (deviceSumEditText.length() == 0) {
             showToastDialog(DeviceControlActivity.this, getResources().getString(R.string.tip_nosum));
             return false;
         }
@@ -691,36 +653,43 @@ public class DeviceControlActivity extends Activity {
     // 生成配置byte数组
     private byte[] generateNewSetting()
     {
-        byte[] settingByte=new byte[9];
-        newSettingStrings=new String[3];
+        byte[] settingByte = new byte[9];
+        newSettingStrings = new String[3];
         // id
-        String idString=deviceIdEditText.getText().toString().trim();
-        newSettingStrings[0]=idString;
-        idString=insertZero(toHEXString(idString), 8);
-        String[] idStrings=new String[]{(String) idString.subSequence(6,8),(String) idString.subSequence(4,6),(String) idString.subSequence(2,4),(String) idString.subSequence(0,2)};
-        for(int i=0;i<idStrings.length;i++)
-        {
-            settingByte[i]=(byte)toValueInt(idStrings[i]);
+        String idString = deviceIdEditText.getText().toString().trim();
+        newSettingStrings[0] = idString;
+        idString = insertZero(toHEXString(idString), 8);
+        String[] idStrings = new String[]{(String) idString.subSequence(6, 8), (String) idString.subSequence(4, 6), (String) idString.subSequence(2, 4), (String) idString.subSequence(0, 2)};
+        for (int i = 0; i < idStrings.length; i++) {
+            settingByte[i] = (byte) toValueInt(idStrings[i]);
         }
 
         // time
-        String timeString=TimeHelper.dateToSecond();
-        newSettingStrings[1]=TimeHelper.secondToDate(timeString);
+        String timeString = TimeHelper.dateToSecond();
+        newSettingStrings[1] = TimeHelper.secondToDate(timeString);
         //String timeString="453302738";
-        timeString=insertZero(toHEXString(timeString), 8);
-        String[] timeStrings=new String[]{(String) timeString.subSequence(6,8),(String) timeString.subSequence(4,6),(String) timeString.subSequence(2,4),(String) timeString.subSequence(0,2)};
-        for(int i=0;i<timeStrings.length;i++)
-        {
-            settingByte[i+4]=(byte) toValueInt(timeStrings[i]);
+        timeString = insertZero(toHEXString(timeString), 8);
+        String[] timeStrings = new String[]{(String) timeString.subSequence(6, 8), (String) timeString.subSequence(4, 6), (String) timeString.subSequence(2, 4), (String) timeString.subSequence(0, 2)};
+        for (int i = 0; i < timeStrings.length; i++) {
+            settingByte[i + 4] = (byte) toValueInt(timeStrings[i]);
         }
 
         // sum
-        String sumString=deviceSumEditText.getText().toString().trim();
-        newSettingStrings[2]=sumString;
-        sumString=insertZero(toHEXString(sumString), 2);
-        settingByte[8]=(byte) toValueInt(sumString);
+        String sumString = deviceSumEditText.getText().toString().trim();
+        newSettingStrings[2] = sumString;
+        sumString = insertZero(toHEXString(sumString), 2);
+        settingByte[8] = (byte) toValueInt(sumString);
 
         return settingByte;
+    }
+
+    public String insertZero(String str, int len)
+    {
+        StringBuilder sb = new StringBuilder(str);
+        while (sb.length() < len) {
+            sb.insert(0, "0");
+        }
+        return sb.toString();
     }
 
     // 数组的反转
@@ -738,13 +707,17 @@ public class DeviceControlActivity extends Activity {
         return (T)dest;  
     }  */
 
-    public String insertZero(String str,int len)
+    // 新建线程，同步数据
+    class SyncThread extends Thread
     {
-        StringBuilder sb=new StringBuilder(str);
-        while (sb.length()<len) {
-            sb.insert(0, "0");
+        @Override
+        public void run() {
+            // TODO Auto-generated method stub
+            super.run();
+            //Log.i(TAG, "syncThread");
+            mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("exerciseData"));
+            operationType = SYNC_DEVICE;
         }
-        return sb.toString();
     }
 
     //检查IP的合法性 

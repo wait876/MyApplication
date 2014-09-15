@@ -32,6 +32,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import static com.zjut.bluetoothle.Constants.*;
@@ -40,21 +41,6 @@ import static com.zjut.bluetoothle.Constants.*;
  * given Bluetooth LE device.
  */
 public class BluetoothLeService extends Service {
-    private final static String TAG = "BluetoothLeService";
-
-    private BluetoothManager mBluetoothManager;
-    private BluetoothAdapter mBluetoothAdapter;
-    private String mBluetoothDeviceAddress;
-    private BluetoothGatt mBluetoothGatt;
-    private int mConnectionState = STATE_DISCONNECTED;
-
-    private byte[] settings=null;
-    private Boolean myMethod=false;
-    //private Boolean isWrite=false;
-    private static final int STATE_DISCONNECTED = 0;
-    private static final int STATE_CONNECTING = 1;
-    private static final int STATE_CONNECTED = 2;
-
     public final static String ACTION_GATT_CONNECTED =
             "com.zjut.bluetoothlegatt.ACTION_GATT_CONNECTED";
     public final static String ACTION_GATT_DISCONNECTED =
@@ -65,17 +51,27 @@ public class BluetoothLeService extends Service {
             "com.zjut.bluetoothlegatt.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
             "com.zjut.bluetoothlegatt.EXTRA_DATA";
-
     public final static String MY_EXTRA_DATA =
             "com.zjut.bluetoothlegatt.MY_EXTRA_DATA";
+    public final static String READ_ACTION = "com.zjut.bluetoothlegatt.READ_ACTION";
+    public final static String SET_ACTION = "com.zjut.bluetoothlegatt.SET_ACTION";
+    public final static String SYNC_ACTION = "com.zjut.bluetoothlegatt.SYNC_ACTION";
+    private final static String TAG = "BluetoothLeService";
+    //private Boolean isWrite=false;
+    private static final int STATE_DISCONNECTED = 0;
+    private int mConnectionState = STATE_DISCONNECTED;
+    private static final int STATE_CONNECTING = 1;
+    private static final int STATE_CONNECTED = 2;
+    private final IBinder mBinder = new LocalBinder();
+    private BluetoothManager mBluetoothManager;
+    private BluetoothAdapter mBluetoothAdapter;
     //public final static String MY_ACTION ="com.zjut.bluetoothlegatt.MY_ACTION";
-
-    public final static String READ_ACTION="com.zjut.bluetoothlegatt.READ_ACTION";
-    public final static String SET_ACTION="com.zjut.bluetoothlegatt.SET_ACTION";
-    public final static String SYNC_ACTION="com.zjut.bluetoothlegatt.SYNC_ACTION";
+    private String mBluetoothDeviceAddress;
+    private BluetoothGatt mBluetoothGatt;
+    private byte[] settings = null;
 
     //public final static UUID UUID_HEART_RATE_MEASUREMENT = UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
-
+    private Boolean myMethod = false;
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -113,8 +109,7 @@ public class BluetoothLeService extends Service {
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (myMethod)
-                {
+                if (myMethod) {
                     switch (operationType) {
 
                         case READ_DEVICE:
@@ -128,16 +123,14 @@ public class BluetoothLeService extends Service {
                             broadcastUpdate(SYNC_ACTION, characteristic);
                             break;
                     }
-            		/*if (Constants.isWrite) {
+                    /*if (Constants.isWrite) {
 						broadcastUpdate(WRITE_ACTION, characteristic);
 					}
             		else {
 						broadcastUpdate(READ_ACTION, characteristic);
 					}*/
                     //broadcastUpdate(MY_ACTION, characteristic);
-                }
-                else
-                {
+                } else {
                     broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
                 }
 
@@ -149,7 +142,7 @@ public class BluetoothLeService extends Service {
                                             BluetoothGattCharacteristic characteristic) {
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
         }
-        
+
         /*@Override
         public void onCharacteristicWrite (BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status)
         {
@@ -157,7 +150,7 @@ public class BluetoothLeService extends Service {
         	broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
         }*/
     };
-
+    private ArrayList<ExerciseData> exerciseDataArrayList;
 
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
@@ -170,18 +163,18 @@ public class BluetoothLeService extends Service {
         //Log.i(TAG, characteristic.getUuid().toString()+"-ljp");
         if (myMethod) {
             if (action.equals(READ_ACTION)) {
-                byte[] readSetting=characteristic.getValue();
-                String result=byteHelper(readSetting);
+                byte[] readSetting = characteristic.getValue();
+                String result = byteHelper(readSetting);
                 intent.putExtra(MY_EXTRA_DATA, result);
             }
 
             if (action.equals(SET_ACTION)) {
                 //Write
                 characteristic.setValue(settings);
-                boolean writeBoolean=mBluetoothGatt.writeCharacteristic(characteristic);
+                boolean writeBoolean = mBluetoothGatt.writeCharacteristic(characteristic);
 
                 intent.putExtra(MY_EXTRA_DATA, String.valueOf(writeBoolean));
-             	/*characteristic.setValue(10000, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
+                 /*characteristic.setValue(10000, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
              	mBluetoothGatt.writeCharacteristic(characteristic);
              	int second=0;
              	second=characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 0);
@@ -189,58 +182,53 @@ public class BluetoothLeService extends Service {
              	intent.putExtra(MY_EXTRA_DATA, String.valueOf(second)); 	*/
             }
             if (action.equals(SYNC_ACTION)) {
-                byte[] exerciseDataByte=characteristic.getValue();
+                byte[] exerciseDataByte = characteristic.getValue();
                 //String exerciseString=exerciseDataHelper(exerciseDataByte);
                 //intent.putExtra(MY_EXTRA_DATA, exerciseString);
-                ExerciseData exerciseData=getExerciseData(exerciseDataByte);
+                ExerciseData exerciseData = getExerciseData(exerciseDataByte);
                 intent.putExtra(MY_EXTRA_DATA, exerciseData);
             }
 
-        }
-        else {
+        } else {
 
             // This is special handling for the Heart Rate Measurement profile.  Data parsing is
             // carried out as per profile specifications:
             // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
 
-            if(characteristic.getUuid().toString().startsWith("0000fff4"))
-            {
+            if (characteristic.getUuid().toString().startsWith("0000fff4")) {
                 //Log.i(TAG, String.valueOf(characteristic.getProperties())+"-ljp");
 
                 //Log.i(TAG, characteristic.getStringValue(0)+"-ljpString");
-                byte[] setting=characteristic.getValue();
-                String result=byteHelper(setting);
+                byte[] setting = characteristic.getValue();
+                String result = byteHelper(setting);
                 //int value=characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 0);
                 //Log.i(TAG, String.valueOf(setting));
                 intent.putExtra(EXTRA_DATA, result);
-            }
-
-            else if (characteristic.getUuid().toString().startsWith("0000fff3")) {
-                int value=characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+            } else if (characteristic.getUuid().toString().startsWith("0000fff3")) {
+                int value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                Log.i(TAG, String.valueOf(value));
+                intent.putExtra(EXTRA_DATA, String.valueOf(value));
+            } else if (characteristic.getUuid().toString().startsWith("0000fff1")) {
+                int value = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                 Log.i(TAG, String.valueOf(value));
                 intent.putExtra(EXTRA_DATA, String.valueOf(value));
             }
-            else if (characteristic.getUuid().toString().startsWith("0000fff1")) {
-                int value=characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
-                Log.i(TAG, String.valueOf(value));
-                intent.putExtra(EXTRA_DATA, String.valueOf(value));
-            }
-        	/*else if (characteristic.getUuid().toString().startsWith("0000fff2")) {
+            /*else if (characteristic.getUuid().toString().startsWith("0000fff2")) {
 				byte[] exerciseData=characteristic.getValue();
-				
+
 				for(int i=0;i<exerciseData.length;i++)
 				{
 					System.out.println(exerciseData[i]);
 				}
 			}*/
-        	
+
             /*else if(characteristic.getUuid().toString().startsWith("00002a19"))
             {
             	int batteryInfo=0;
             	batteryInfo=characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
             	Log.i(TAG, String.valueOf(batteryInfo)+"-ljpBattery");
     			intent.putExtra(EXTRA_DATA, String.valueOf(batteryInfo));
-            	
+
     		}
             else if(characteristic.getUuid().toString().startsWith("00002a70"))
             {
@@ -249,14 +237,14 @@ public class BluetoothLeService extends Service {
             	second=characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 0);
             	Log.i(TAG, String.valueOf(second)+"ljpSecond");
             	intent.putExtra(EXTRA_DATA, String.valueOf(second));
-            	
+
             	//Write
             	characteristic.setValue(10000, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
             	mBluetoothGatt.writeCharacteristic(characteristic);
             	second=characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 0);
             	Log.i(TAG, String.valueOf(second)+"ljpSecond2");
-            	intent.putExtra(EXTRA_DATA, String.valueOf(second)); 	
-            	
+            	intent.putExtra(EXTRA_DATA, String.valueOf(second));
+
             }*/
            /* if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
                 int flag = characteristic.getProperties();
@@ -286,12 +274,6 @@ public class BluetoothLeService extends Service {
         sendBroadcast(intent);
     }
 
-    public class LocalBinder extends Binder {
-        BluetoothLeService getService() {
-            return BluetoothLeService.this;
-        }
-    }
-
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
@@ -305,8 +287,6 @@ public class BluetoothLeService extends Service {
         close();
         return super.onUnbind(intent);
     }
-
-    private final IBinder mBinder = new LocalBinder();
 
     /**
      * Initializes a reference to the local Bluetooth adapter.
@@ -413,10 +393,9 @@ public class BluetoothLeService extends Service {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
-        myMethod=false;
+        myMethod = false;
         mBluetoothGatt.readCharacteristic(characteristic);
     }
-
 
     //我的读取方法
     public void myReadCharacteristic(BluetoothGattCharacteristic characteristic) {
@@ -424,21 +403,21 @@ public class BluetoothLeService extends Service {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
-        myMethod=true;
+        myMethod = true;
         // Constants.isWrite=false;
         mBluetoothGatt.readCharacteristic(characteristic);
         Log.i(TAG, "myReadCharacteristic+ljp");
     }
 
     //我的写入方法
-    public void myWriteCharacteristic(BluetoothGattCharacteristic characteristic,byte[] settings) {
+    public void myWriteCharacteristic(BluetoothGattCharacteristic characteristic, byte[] settings) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
         myMethod=true;
         //Constants.isWrite=true;
-        this.settings=settings;
+        this.settings = settings;
         mBluetoothGatt.readCharacteristic(characteristic);
         Log.i(TAG, "myReadCharacteristic+ljp");
     }
@@ -447,7 +426,7 @@ public class BluetoothLeService extends Service {
      * Enables or disables notification on a give characteristic.
      *
      * @param characteristic Characteristic to act on.
-     * @param enabled If true, enable notification.  False otherwise.
+     * @param enabled        If true, enable notification.  False otherwise.
      */
     public void setCharacteristicNotification(BluetoothGattCharacteristic characteristic,
                                               boolean enabled) {
@@ -478,32 +457,29 @@ public class BluetoothLeService extends Service {
         return mBluetoothGatt.getServices();
     }
 
-    public String byteHelper(byte[] values)
-    {
+    public String byteHelper(byte[] values) {
         //String result=null;
-        String[] strings=new String[9];
+        String[] strings = new String[9];
 
-        for(int i=0;i<values.length;i++)
-        {
-            int temp=values[i];
-            if (temp<0) {
-                temp=temp+256;
+        for (int i = 0; i < values.length; i++) {
+            int temp = values[i];
+            if (temp < 0) {
+                temp = temp + 256;
             }
             // 小于10时，需要在前边补0！
-            strings[i]=insertZero(Constants.toHEXString(String.valueOf(temp)), 2);
+            strings[i] = insertZero(Constants.toHEXString(String.valueOf(temp)), 2);
         }
 
-        String device_id=strings[3]+strings[2]+strings[1]+strings[0];
-        device_id=Constants.toValueString(device_id);
-        String device_time=strings[7]+strings[6]+strings[5]+strings[4];
-        device_time=TimeHelper.secondToDate(Constants.toValueString(device_time));
-        String device_sum=Constants.toValueString(strings[8]);
-        return device_id+"_"+device_time+"_"+device_sum;
+        String device_id = strings[3] + strings[2] + strings[1] + strings[0];
+        device_id = Constants.toValueString(device_id);
+        String device_time = strings[7] + strings[6] + strings[5] + strings[4];
+        device_time = TimeHelper.secondToDate(Constants.toValueString(device_time));
+        String device_sum = Constants.toValueString(strings[8]);
+        return device_id + "_" + device_time + "_" + device_sum;
     }
 
-    public String exerciseDataHelper(byte[] values)
-    {
-        String[] strings=new String[16];
+    public String exerciseDataHelper(byte[] values) {
+        String[] strings = new String[16];
         for(int i=0;i<values.length;i++)
         {
             int temp=values[i];
@@ -513,18 +489,18 @@ public class BluetoothLeService extends Service {
             // 小于10时，需要在前边补0！
             strings[i]=insertZero(Constants.toHEXString(String.valueOf(temp)), 2);
         }
-        String data_time=strings[3]+strings[2]+strings[1]+strings[0];
-        data_time=TimeHelper.minuteToDate(toValueString(data_time));
-        String device_id=Constants.toValueString(strings[5]+strings[4]);
-        String data_energy=Constants.toValueString(strings[7]+strings[6]);
-        String counts1=Constants.toValueString(strings[9]+strings[8]);
-        String counts2=Constants.toValueString(strings[11]+strings[10]);
-        String counts3=Constants.toValueString(strings[13]+strings[12]);
-        String counts4=Constants.toValueString(strings[15]+strings[14]);
+        String data_time = strings[3] + strings[2] + strings[1] + strings[0];
+        data_time = TimeHelper.minuteToDate(toValueString(data_time));
+        String device_id = Constants.toValueString(strings[5] + strings[4]);
+        String data_energy = Constants.toValueString(strings[7] + strings[6]);
+        String counts1 = Constants.toValueString(strings[9] + strings[8]);
+        String counts2 = Constants.toValueString(strings[11] + strings[10]);
+        String counts3 = Constants.toValueString(strings[13] + strings[12]);
+        String counts4 = Constants.toValueString(strings[15] + strings[14]);
         if (device_id.equals("65535")) {
             return "NULL";
         }
-        return data_time+"_"+device_id+"_"+data_energy+"_"+counts1+"_"+counts2+"_"+counts3+"_"+counts4;
+        return data_time + "_" + device_id + "_" + data_energy + "_" + counts1 + "_" + counts2 + "_" + counts3 + "_" + counts4;
     }
 
     public ExerciseData getExerciseData(byte[] values)
@@ -539,31 +515,33 @@ public class BluetoothLeService extends Service {
             // 小于10时，需要在前边补0！
             strings[i]=insertZero(Constants.toHEXString(String.valueOf(temp)), 2);
         }
-        ExerciseData exerciseData=new ExerciseData(
-                TimeHelper.minuteToDate(toValueString(strings[3]+strings[2]+strings[1]+strings[0])),
-                Constants.toValueString(strings[5]+strings[4]),
-                Constants.toValueString(strings[7]+strings[6]),
-                Constants.toValueString(strings[9]+strings[8]),
-                Constants.toValueString(strings[11]+strings[10]),
-                Constants.toValueString(strings[13]+strings[12]),
-                Constants.toValueString(strings[15]+strings[14]));
-        if(exerciseData.getDevice_id().equals("65535"))
-        {
+        ExerciseData exerciseData = new ExerciseData(
+                TimeHelper.minuteToDate(toValueString(strings[3] + strings[2] + strings[1] + strings[0])),
+                Constants.toValueString(strings[5] + strings[4]),
+                Constants.toValueString(strings[7] + strings[6]),
+                Constants.toValueString(strings[9] + strings[8]),
+                Constants.toValueString(strings[11] + strings[10]),
+                Constants.toValueString(strings[13] + strings[12]),
+                Constants.toValueString(strings[15] + strings[14]));
+        if (exerciseData.getDevice_id().equals("65535")) {
             exerciseData.setIsEmpty(true);
-        }
-        else
-        {
+        } else {
             exerciseData.setIsEmpty(false);
         }
         return exerciseData;
     }
 
-    public String insertZero(String str,int len)
-    {
-        StringBuilder sb=new StringBuilder(str);
-        while (sb.length()<len) {
+    public String insertZero(String str, int len) {
+        StringBuilder sb = new StringBuilder(str);
+        while (sb.length() < len) {
             sb.insert(0, "0");
         }
         return sb.toString();
+    }
+
+    public class LocalBinder extends Binder {
+        BluetoothLeService getService() {
+            return BluetoothLeService.this;
+        }
     }
 }
