@@ -32,7 +32,12 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import static com.zjut.bluetoothle.Constants.*;
@@ -41,23 +46,18 @@ import static com.zjut.bluetoothle.Constants.*;
  * given Bluetooth LE device.
  */
 public class BluetoothLeService extends Service {
-    public final static String ACTION_GATT_CONNECTED =
-            "com.zjut.bluetoothlegatt.ACTION_GATT_CONNECTED";
-    public final static String ACTION_GATT_DISCONNECTED =
-            "com.zjut.bluetoothlegatt.ACTION_GATT_DISCONNECTED";
-    public final static String ACTION_GATT_SERVICES_DISCOVERED =
-            "com.zjut.bluetoothlegatt.ACTION_GATT_SERVICES_DISCOVERED";
-    public final static String ACTION_DATA_AVAILABLE =
-            "com.zjut.bluetoothlegatt.ACTION_DATA_AVAILABLE";
-    public final static String EXTRA_DATA =
-            "com.zjut.bluetoothlegatt.EXTRA_DATA";
-    public final static String MY_EXTRA_DATA =
-            "com.zjut.bluetoothlegatt.MY_EXTRA_DATA";
+
+    public final static String ACTION_GATT_CONNECTED = "com.zjut.bluetoothlegatt.ACTION_GATT_CONNECTED";
+    public final static String ACTION_GATT_DISCONNECTED = "com.zjut.bluetoothlegatt.ACTION_GATT_DISCONNECTED";
+    public final static String ACTION_GATT_SERVICES_DISCOVERED = "com.zjut.bluetoothlegatt.ACTION_GATT_SERVICES_DISCOVERED";
+    public final static String ACTION_DATA_AVAILABLE = "com.zjut.bluetoothlegatt.ACTION_DATA_AVAILABLE";
+    public final static String EXTRA_DATA = "com.zjut.bluetoothlegatt.EXTRA_DATA";
+    public final static String MY_EXTRA_DATA = "com.zjut.bluetoothlegatt.MY_EXTRA_DATA";
     public final static String READ_ACTION = "com.zjut.bluetoothlegatt.READ_ACTION";
     public final static String SET_ACTION = "com.zjut.bluetoothlegatt.SET_ACTION";
     public final static String SYNC_ACTION = "com.zjut.bluetoothlegatt.SYNC_ACTION";
     private final static String TAG = "BluetoothLeService";
-    //private Boolean isWrite=false;
+
     private static final int STATE_DISCONNECTED = 0;
     private int mConnectionState = STATE_DISCONNECTED;
     private static final int STATE_CONNECTING = 1;
@@ -66,9 +66,14 @@ public class BluetoothLeService extends Service {
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     //public final static String MY_ACTION ="com.zjut.bluetoothlegatt.MY_ACTION";
+
     private String mBluetoothDeviceAddress;
     private BluetoothGatt mBluetoothGatt;
     private byte[] settings = null;
+
+
+    private File file;
+    private HashMap<String, BluetoothGattCharacteristic> allCharacteristics;
 
     //public final static UUID UUID_HEART_RATE_MEASUREMENT = UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
     private Boolean myMethod = false;
@@ -123,13 +128,7 @@ public class BluetoothLeService extends Service {
                             broadcastUpdate(SYNC_ACTION, characteristic);
                             break;
                     }
-                    /*if (Constants.isWrite) {
-						broadcastUpdate(WRITE_ACTION, characteristic);
-					}
-            		else {
-						broadcastUpdate(READ_ACTION, characteristic);
-					}*/
-                    //broadcastUpdate(MY_ACTION, characteristic);
+
                 } else {
                     broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
                 }
@@ -151,6 +150,8 @@ public class BluetoothLeService extends Service {
         }*/
     };
     private ArrayList<ExerciseData> exerciseDataArrayList;
+    //同步是否完成的标记
+    private boolean isSysnDone = false;
 
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
@@ -172,7 +173,6 @@ public class BluetoothLeService extends Service {
                 //Write
                 characteristic.setValue(settings);
                 boolean writeBoolean = mBluetoothGatt.writeCharacteristic(characteristic);
-
                 intent.putExtra(MY_EXTRA_DATA, String.valueOf(writeBoolean));
                  /*characteristic.setValue(10000, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
              	mBluetoothGatt.writeCharacteristic(characteristic);
@@ -186,7 +186,31 @@ public class BluetoothLeService extends Service {
                 //String exerciseString=exerciseDataHelper(exerciseDataByte);
                 //intent.putExtra(MY_EXTRA_DATA, exerciseString);
                 ExerciseData exerciseData = getExerciseData(exerciseDataByte);
-                intent.putExtra(MY_EXTRA_DATA, exerciseData);
+                //intent.putExtra(MY_EXTRA_DATA, exerciseData);
+
+                //Log.i(TAG,exerciseData.toString());
+                if (!exerciseData.getIsEmpty()) {
+                    exerciseDataArrayList.add(exerciseData);
+                    myReadCharacteristic(allCharacteristics.get("exerciseData"));
+                    isSysnDone = false;
+                    /*try {
+                        file = new File(android.os.Environment.getExternalStorageDirectory() + "/BLE/" +exerciseData.getDevice_id()+"_backup" + ".txt");
+                        FileOutputStream fileOutputStream = new FileOutputStream(file, true);
+                        fileOutputStream.write((exerciseData.toString()+"\r\n").getBytes());
+                        fileOutputStream.close();
+
+                    } catch (FileNotFoundException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }*/
+                } else {
+                    exerciseDataArrayList.trimToSize();
+                    intent.putExtra("ArrayList", exerciseDataArrayList);
+                    isSysnDone = true;
+                }
             }
 
         } else {
@@ -270,12 +294,15 @@ public class BluetoothLeService extends Service {
                 }
             }*/
         }
-
-        sendBroadcast(intent);
+        if (!intent.getAction().equals(SYNC_ACTION))
+            sendBroadcast(intent);
+        else if (isSysnDone)
+            sendBroadcast(intent);
     }
 
     @Override
     public IBinder onBind(Intent intent) {
+
         return mBinder;
     }
 
@@ -310,6 +337,7 @@ public class BluetoothLeService extends Service {
             return false;
         }
 
+        exerciseDataArrayList = new ArrayList<ExerciseData>();
         return true;
     }
 
@@ -406,7 +434,7 @@ public class BluetoothLeService extends Service {
         myMethod = true;
         // Constants.isWrite=false;
         mBluetoothGatt.readCharacteristic(characteristic);
-        Log.i(TAG, "myReadCharacteristic+ljp");
+        //Log.i(TAG, "myReadCharacteristic+ljp");
     }
 
     //我的写入方法
@@ -419,7 +447,7 @@ public class BluetoothLeService extends Service {
         //Constants.isWrite=true;
         this.settings = settings;
         mBluetoothGatt.readCharacteristic(characteristic);
-        Log.i(TAG, "myReadCharacteristic+ljp");
+        //Log.i(TAG, "myReadCharacteristic+ljp");
     }
 
     /**
@@ -537,6 +565,14 @@ public class BluetoothLeService extends Service {
             sb.insert(0, "0");
         }
         return sb.toString();
+    }
+
+    public HashMap<String, BluetoothGattCharacteristic> getAllCharacteristics() {
+        return allCharacteristics;
+    }
+
+    public void setAllCharacteristics(HashMap<String, BluetoothGattCharacteristic> allCharacteristics) {
+        this.allCharacteristics = allCharacteristics;
     }
 
     public class LocalBinder extends Binder {
