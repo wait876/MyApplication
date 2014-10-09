@@ -17,16 +17,19 @@
 package com.zjut.bluetoothle;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -47,23 +50,39 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
 
-
+import static com.zjut.bluetoothle.Constants.SET_DEVICE;
+import static com.zjut.bluetoothle.Constants.operationType;
 
 
 /**
  * Activity for scanning and displaying available Bluetooth LE devices.
  */
 public class DeviceScanActivity extends ListActivity {
-    private static String TAG="DeviceScanActivity";
+    private static final int REQUEST_ENABLE_BT = 1;
+    // Stops scanning after 10 seconds.
+    private static final long SCAN_PERIOD = 10000;
+    private static String TAG = "DeviceScanActivity";
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
     private Handler mHandler;
+    private String imei;
+    private boolean isValid = false;
+    // Device scan callback.
+    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
 
-
-    private static final int REQUEST_ENABLE_BT = 1;
-    // Stops scanning after 10 seconds.
-    private static final long SCAN_PERIOD = 10000;
+        @Override
+        public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mLeDeviceListAdapter.addDevice(device);
+                    mLeDeviceListAdapter.notifyDataSetChanged();
+                }
+            });
+        }
+    };
+    private long exitTime = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,7 +102,7 @@ public class DeviceScanActivity extends ListActivity {
         // BluetoothAdapter through BluetoothManager.
         /*final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();*/
-        mBluetoothAdapter=BluetoothAdapter.getDefaultAdapter();
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         // Checks if Bluetooth is supported on the device.
         if (mBluetoothAdapter == null) {
@@ -92,6 +111,24 @@ public class DeviceScanActivity extends ListActivity {
             return;
         }
         Log.i(TAG, "onCreate");
+
+        TelephonyManager tm = (TelephonyManager) this.getSystemService(TELEPHONY_SERVICE);
+        imei = tm.getDeviceId();
+
+        for (String string : Constants.mobiles) {
+            if (string.equals(imei)) {
+                isValid = true;
+                break;
+            } else
+                isValid = false;
+        }
+        if (!isValid) {
+            Toast.makeText(this, getResources().getString(R.string.invalid_device), Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        } else {
+            Log.i(TAG, "Device ok");
+        }
     }
 
     @Override
@@ -133,6 +170,7 @@ public class DeviceScanActivity extends ListActivity {
         switch (item.getItemId()) {
             case R.id.menu_scan:
                 mLeDeviceListAdapter.clear();
+
                 scanLeDevice(true);
                 //tipHandler=new Handler();
                 //this.showToastDialog(this, "TEST", 1000);
@@ -152,7 +190,7 @@ public class DeviceScanActivity extends ListActivity {
         // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
         // fire an intent to display a dialog asking the user to grant permission to enable it.
         if (!mBluetoothAdapter.isEnabled()) {
-            //if (!mBluetoothAdapter.isEnabled()) 
+            //if (!mBluetoothAdapter.isEnabled())
             {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -162,7 +200,7 @@ public class DeviceScanActivity extends ListActivity {
         // Initializes list view adapter.
         mLeDeviceListAdapter = new LeDeviceListAdapter();
         setListAdapter(mLeDeviceListAdapter);
-        if(mBluetoothAdapter.isEnabled())
+        if (mBluetoothAdapter.isEnabled())
             scanLeDevice(true);
     }
 
@@ -209,7 +247,7 @@ public class DeviceScanActivity extends ListActivity {
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if (mLeDeviceListAdapter.getCount()==0 && mScanning) {
+                    if (mLeDeviceListAdapter.getCount() == 0 && mScanning) {
                         ShowCenterToast(getResources().getString(R.string.scan_not_found));
                     }
                     mScanning = false;
@@ -226,6 +264,51 @@ public class DeviceScanActivity extends ListActivity {
         invalidateOptionsMenu();
     }
 
+    //再按一次 退出程序
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
+            if (mScanning) {
+                scanLeDevice(false);
+            } else {
+                /*if((System.currentTimeMillis()-exitTime) > 2000){
+
+                    //Toast.makeText(DeviceScanActivity.this, getResources().getString(R.string.exit_confirm), Toast.LENGTH_SHORT).show();
+                    ShowCenterToast(getResources().getString(R.string.exit_confirm));
+                    //showToastDialog(this, getResources().getString(R.string.exit_confirm), 1900);
+                    //Toast.makeText(getApplicationContext(), "", Toast.LENGTH_SHORT).show();
+                    exitTime = System.currentTimeMillis();
+                } else {
+                    finish();
+                }*/
+                new AlertDialog.Builder(DeviceScanActivity.this).setTitle(getResources().getString(R.string.exit_confirm2))
+                        .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface arg0, int arg1) {
+                                // TODO Auto-generated method stub
+                                finish();
+
+                            }
+                        }).setNegativeButton(getResources().getString(R.string.cancel), null).show();
+
+            }
+
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    public void ShowCenterToast(String string) {
+        Toast toast = Toast.makeText(this, string, Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.CENTER, 0, 0);
+        toast.show();
+    }
+
+    static class ViewHolder {
+        TextView deviceName;
+        TextView deviceAddress;
+    }
+
     // Adapter for holding devices found through scanning.
     private class LeDeviceListAdapter extends BaseAdapter {
         private ArrayList<BluetoothDevice> mLeDevices;
@@ -238,7 +321,7 @@ public class DeviceScanActivity extends ListActivity {
         }
 
         public void addDevice(BluetoothDevice device) {
-            if(!mLeDevices.contains(device)) {
+            if (!mLeDevices.contains(device) && device.getName().startsWith("My")) {
                 mLeDevices.add(device);
             }
         }
@@ -283,68 +366,13 @@ public class DeviceScanActivity extends ListActivity {
             BluetoothDevice device = mLeDevices.get(i);
             final String deviceName = device.getName();
             if (deviceName != null && deviceName.length() > 0)
-                viewHolder.deviceName.setText(""+deviceName);
+                viewHolder.deviceName.setText("" + deviceName);
             else
-                viewHolder.deviceName.setText(""+R.string.unknown_device);
-            viewHolder.deviceAddress.setText(""+device.getAddress());
+                viewHolder.deviceName.setText("" + R.string.unknown_device);
+            viewHolder.deviceAddress.setText("" + device.getAddress());
 
             return view;
         }
-    }
-
-    // Device scan callback.
-    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
-
-        @Override
-        public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mLeDeviceListAdapter.addDevice(device);
-                    mLeDeviceListAdapter.notifyDataSetChanged();
-                }
-            });
-        }
-    };
-
-    static class ViewHolder {
-        TextView deviceName;
-        TextView deviceAddress;
-    }
-
-    private long exitTime=0;
-    //再按一次 退出程序
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN){
-            if(mScanning)
-            {
-                scanLeDevice(false);
-            }
-            else {
-                if((System.currentTimeMillis()-exitTime) > 2000){
-
-                    //Toast.makeText(DeviceScanActivity.this, getResources().getString(R.string.exit_confirm), Toast.LENGTH_SHORT).show();
-                    ShowCenterToast(getResources().getString(R.string.exit_confirm));
-                    //showToastDialog(this, getResources().getString(R.string.exit_confirm), 1900);
-                    //Toast.makeText(getApplicationContext(), "", Toast.LENGTH_SHORT).show();
-                    exitTime = System.currentTimeMillis();
-                } else {
-                    finish();
-
-                    //System.exit(0);
-                }
-            }
-
-            return true;
-        }
-        return super.onKeyDown(keyCode, event);
-    }
-    public void ShowCenterToast(String string)
-    {
-        Toast toast = Toast.makeText(this, string, Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.CENTER, 0, 0);
-        toast.show();
     }
 
 }

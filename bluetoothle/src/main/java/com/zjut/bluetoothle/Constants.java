@@ -11,6 +11,8 @@ public class Constants {
     public static boolean DEBUG = true;
     public static int operationType = 0;
 
+    public static String[] mobiles = {"358240052841202", "864502021674965"};
+
     // 10->16
     public static String toHEXString(String string) {
         String result = null;

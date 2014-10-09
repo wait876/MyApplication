@@ -7,6 +7,7 @@ import java.util.Date;
 public class TimeHelper {
     static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     static SimpleDateFormat sdf2 = new SimpleDateFormat("yyyyMMddHHmmss");
+
     private static Date baseData = new Date(100, 0, 1, 0, 0, 0);
     private static Date targetData = null;
 
@@ -77,5 +78,9 @@ public class TimeHelper {
     public static String minuteToDate(String minuteString) {
         Long minute = Long.parseLong(minuteString);
         return secondToDate(minute * 60);
+    }
+
+    public static String getMobileTime() {
+        return sdf.format(new Date());
     }
 }

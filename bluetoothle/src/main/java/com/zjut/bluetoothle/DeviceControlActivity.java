@@ -33,6 +33,7 @@ import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -54,12 +55,14 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
 import java.util.TimerTask;
 
 import static com.zjut.bluetoothle.Constants.*;
@@ -80,6 +83,9 @@ public class DeviceControlActivity extends Activity {
     private HashMap<String, BluetoothGattCharacteristic> allCharacteristics;
     private TextView mConnectionState;	//连接状态
     private TextView mDataField;		//数据
+    private TextView mobileTime;
+
+
     private String mDeviceName;
     private String mDeviceAddress;
     private ExpandableListView mGattServicesList;	//ServicesList
@@ -208,13 +214,16 @@ public class DeviceControlActivity extends Activity {
                 // Show all the supported services and characteristics on the user interface.
                 // 显示服务与属性
                 displayGattServices(mBluetoothLeService.getSupportedGattServices());
-                showRequestDialog(getResources().getString(R.string.reading_data));
+
                 //在此处添加连接后要读取的属性
                 // 自动读取序列号
                 //mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("Serial Number"));
+
                 // 读取设置
+                showRequestDialog(getResources().getString(R.string.reading_data));
                 mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("setting"));
                 operationType = READ_DEVICE;
+
                 // 读取运动数据
                 //mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("exerciseData"));
 
@@ -231,6 +240,7 @@ public class DeviceControlActivity extends Activity {
                 deviceIdEditText.setText(strings[0]);
                 deviceTimeTextView.setText(strings[1]);
                 deviceSumEditText.setText(strings[2]);
+                mobileTime.setText(TimeHelper.getMobileTime());
                 //testEditText.setText(tempString);
                 /*
 				 * String arrayString[]=tempString.split("-"); for (String
@@ -379,6 +389,8 @@ public class DeviceControlActivity extends Activity {
         ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
         mConnectionState = (TextView) findViewById(R.id.connection_state);
         mDataField = (TextView) findViewById(R.id.data_value);
+        mobileTime = (TextView) findViewById(R.id.mobile_time);
+        mobileTime.setText(TimeHelper.getMobileTime());
 
         dir = new File(android.os.Environment.getExternalStorageDirectory() + "/BLE");
         if (!dir.exists())
@@ -497,13 +509,15 @@ public class DeviceControlActivity extends Activity {
         mConnectionState.setFocusable(true);
         mConnectionState.requestFocus();
         mConnectionState.setFocusableInTouchMode(true);
-    }
+
+   }
 
     //解除广播接收
     @Override
     protected void onPause() {
         super.onPause();
         unregisterReceiver(mGattUpdateReceiver);
+
     }
 
     //解除广播接收,清空服务
@@ -703,6 +717,7 @@ public class DeviceControlActivity extends Activity {
         for (int i = 0; i < timeStrings.length; i++) {
             settingByte[i + 4] = (byte) toValueInt(timeStrings[i]);
         }
+        mobileTime.setText(TimeHelper.getMobileTime());
 
         // sum
         String sumString = deviceSumEditText.getText().toString().trim();
@@ -721,6 +736,7 @@ public class DeviceControlActivity extends Activity {
         }
         return sb.toString();
     }
+
 
     // 数组的反转
     /*public <T> T invertArray(T array) {  
