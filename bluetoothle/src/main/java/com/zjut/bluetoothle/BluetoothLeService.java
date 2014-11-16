@@ -167,7 +167,21 @@ public class BluetoothLeService extends Service {
         if (myMethod) {
             if (action.equals(READ_ACTION)) {
                 byte[] readSetting = characteristic.getValue();
+
+
+                /* old version
                 String result = byteHelper(readSetting);
+                */
+                String result;
+                //old
+                if (readSetting.length == 9) {
+                    result = byteHelper(readSetting);
+                } else
+                //new
+                {
+                    result = byteHelper2(readSetting);
+                }
+
                 intent.putExtra(MY_EXTRA_DATA, result);
             }
 
@@ -486,6 +500,7 @@ public class BluetoothLeService extends Service {
         return mBluetoothGatt.getServices();
     }
 
+    // old version
     public String byteHelper(byte[] values) {
         //String result=null;
         String[] strings = new String[9];
@@ -505,6 +520,36 @@ public class BluetoothLeService extends Service {
         device_time = TimeHelper.secondToDate(Constants.toValueString(device_time));
         String device_sum = Constants.toValueString(strings[8]);
         return device_id + "_" + device_time + "_" + device_sum;
+    }
+
+    // new version, add advertising time
+    public String byteHelper2(byte[] values) {
+        //String result=null;
+        String[] strings = new String[15];
+
+        for (int i = 0; i < values.length; i++) {
+            int temp = values[i];
+            if (temp < 0) {
+                temp = temp + 256;
+            }
+            // 小于10时，需要在前边补0！
+            strings[i] = insertZero(Constants.toHEXString(String.valueOf(temp)), 2);
+        }
+
+        String device_id = strings[3] + strings[2] + strings[1] + strings[0];
+        device_id = Constants.toValueString(device_id);
+        String device_time = strings[7] + strings[6] + strings[5] + strings[4];
+        device_time = TimeHelper.secondToDate(Constants.toValueString(device_time));
+        String device_sum = Constants.toValueString(strings[8]);
+
+        String start1 = Constants.toValueString(strings[9]);
+        String end1 = Constants.toValueString(strings[10]);
+        String start2 = Constants.toValueString(strings[11]);
+        String end2 = Constants.toValueString(strings[12]);
+        String start3 = Constants.toValueString(strings[13]);
+        String end3 = Constants.toValueString(strings[14]);
+
+        return device_id + "_" + device_time + "_" + device_sum + "_" + start1 + "_" + end1 + "_" + start2 + "_" + end2 + "_" + start3 + "_" + end3;
     }
 
     public String exerciseDataHelper(byte[] values) {

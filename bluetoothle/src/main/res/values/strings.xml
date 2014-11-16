@@ -46,10 +46,16 @@
     <string name="label_mobile_time">手机时间:</string>
     <string name="exit_confirm2">确认退出？</string>
 
+    <string name="label_advertising_time_1">广播时间1:</string>
+    <string name="label_advertising_time_2">广播时间2:</string>
+    <string name="label_advertising_time_3">广播时间3:</string>
+    <string name="label_line">--</string>
+
     <string name="tip_invalid">缺少必要信息</string>
     
     <string name="tip_noid">设备ID不可为空</string>
     <string name="tip_nosum">设备数量不可为空</string>
+    <string name="tip_noadvertisingtime">广播时间不可为空</string>
     <string name="tip_submit_ok">同步成功</string>
     <string name="tip_submit_fail">同步失败，请重试</string>
      

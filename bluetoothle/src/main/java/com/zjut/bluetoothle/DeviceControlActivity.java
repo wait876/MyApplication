@@ -36,6 +36,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,6 +47,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.LinearLayout;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -181,6 +183,28 @@ public class DeviceControlActivity extends Activity {
     private Button readButton;
     private Button syncButton;
     private int syncCounts;
+
+    //advertising time  2014-11-16
+    private EditText advertising_time_start_1_EditText;
+    private EditText advertising_time_end_1_EditText;
+    private EditText advertising_time_start_2_EditText;
+    private EditText advertising_time_end_2_EditText;
+    private EditText advertising_time_start_3_EditText;
+    private EditText advertising_time_end_3_EditText;
+    private LinearLayout advertising_1_Layout;
+    private LinearLayout advertising_2_Layout;
+    private LinearLayout advertising_3_Layout;
+    private boolean isNewVersion = false;
+
+    /*private int advertising_time_start_1;
+    private int advertising_time_end_1;
+    private int advertising_time_start_2;
+    private int advertising_time_end_2;
+    private int advertising_time_start_3;
+    private int advertising_time_end_3;*/
+
+
+
     // 接收到广播之后的响应
     // Handles various events fired by the Service.
     // ACTION_GATT_CONNECTED: connected to a GATT server.
@@ -241,6 +265,23 @@ public class DeviceControlActivity extends Activity {
                 deviceTimeTextView.setText(strings[1]);
                 deviceSumEditText.setText(strings[2]);
                 mobileTime.setText(TimeHelper.getMobileTime());
+
+                if (strings.length > 3) {
+                    isNewVersion = true;
+                    advertising_time_start_1_EditText.setText(strings[3]);
+                    advertising_time_end_1_EditText.setText(strings[4]);
+                    advertising_time_start_2_EditText.setText(strings[5]);
+                    advertising_time_end_2_EditText.setText(strings[6]);
+                    advertising_time_start_3_EditText.setText(strings[7]);
+                    advertising_time_end_3_EditText.setText(strings[8]);
+
+                    advertising_1_Layout.setVisibility(View.VISIBLE);
+                    advertising_2_Layout.setVisibility(View.VISIBLE);
+                    advertising_3_Layout.setVisibility(View.VISIBLE);
+                } else {
+                    isNewVersion = false;
+
+                }
                 //testEditText.setText(tempString);
                 /*
 				 * String arrayString[]=tempString.split("-"); for (String
@@ -258,6 +299,14 @@ public class DeviceControlActivity extends Activity {
                     deviceIdEditText.setText(newSettingStrings[0]);
                     deviceTimeTextView.setText(newSettingStrings[1]);
                     deviceSumEditText.setText(newSettingStrings[2]);
+                    if (isNewVersion) {
+                        advertising_time_start_1_EditText.setText(newSettingStrings[3]);
+                        advertising_time_end_1_EditText.setText(newSettingStrings[4]);
+                        advertising_time_start_2_EditText.setText(newSettingStrings[5]);
+                        advertising_time_end_2_EditText.setText(newSettingStrings[6]);
+                        advertising_time_start_3_EditText.setText(newSettingStrings[7]);
+                        advertising_time_end_3_EditText.setText(newSettingStrings[8]);
+                    }
                 } else {
                     showToastDialog(DeviceControlActivity.this, getResources().getString(R.string.tip_submit_fail));
                 }
@@ -403,6 +452,32 @@ public class DeviceControlActivity extends Activity {
         deviceSumEditText = (EditText) this.findViewById(R.id.editText_device_sum);
         deviceTimeTextView = (TextView) this.findViewById(R.id.device_time);
         syncDataTextView = (TextView) this.findViewById(R.id.exerciseDataTextview);
+
+        advertising_time_start_1_EditText = (EditText) this.findViewById(R.id.editText_advertising_start_1);
+        advertising_time_start_2_EditText = (EditText) this.findViewById(R.id.editText_advertising_start_2);
+        advertising_time_start_3_EditText = (EditText) this.findViewById(R.id.editText_advertising_start_3);
+        advertising_time_end_1_EditText = (EditText) this.findViewById(R.id.editText_advertising_end_1);
+        advertising_time_end_2_EditText = (EditText) this.findViewById(R.id.editText_advertising_end_2);
+        advertising_time_end_3_EditText = (EditText) this.findViewById(R.id.editText_advertising_end_3);
+        advertising_1_Layout = (LinearLayout) this.findViewById(R.id.layout_advertising_1);
+        advertising_2_Layout = (LinearLayout) this.findViewById(R.id.layout_advertising_2);
+        advertising_3_Layout = (LinearLayout) this.findViewById(R.id.layout_advertising_3);
+
+        /*advertising_time_start_1_EditText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (KeyEvent.KEYCODE_ENTER == keyCode && event.getAction() == KeyEvent.ACTION_DOWN) {
+                    advertising_time_end_1_EditText.setFocusable(true);
+                    advertising_time_end_1_EditText.requestFocus();
+                    advertising_time_end_1_EditText.setFocusableInTouchMode(true);
+                    return true;
+                }
+                return false;
+            }
+        });*/
+
+
+
         /*testEditText = (EditText) findViewById(R.id.editText1);
         testButton = (Button) findViewById(R.id.testBtuuon);
         testButton.setOnClickListener(new OnClickListener() {
@@ -455,7 +530,16 @@ public class DeviceControlActivity extends Activity {
                                 public void onClick(DialogInterface arg0, int arg1) {
                                     // TODO Auto-generated method stub
 
+                                    /*  old version
                                     byte[] settings = generateNewSetting();
+                                    */
+
+                                    byte[] settings;
+                                    if (isNewVersion) {
+                                        settings = generateNewSetting2();
+                                    } else {
+                                        settings = generateNewSetting();
+                                    }
 
                                     mBluetoothLeService.myWriteCharacteristic(allCharacteristics.get("setting"), settings);
                                     operationType = SET_DEVICE;
@@ -690,11 +774,21 @@ public class DeviceControlActivity extends Activity {
             return false;
         }
 
+        if (isNewVersion) {
+            if (advertising_time_end_1_EditText.length() == 0 || advertising_time_start_1_EditText.length() == 0 ||
+                    advertising_time_end_2_EditText.length() == 0 || advertising_time_start_2_EditText.length() == 0 ||
+                    advertising_time_end_3_EditText.length() == 0 || advertising_time_start_3_EditText.length() == 0) {
+                showToastDialog(DeviceControlActivity.this, getResources().getString(R.string.tip_noadvertisingtime));
+                return false;
+            }
+        }
+
+
         return true;
 
     }
 
-    // 生成配置byte数组
+    // 生成配置byte数组  old version
     private byte[] generateNewSetting()
     {
         byte[] settingByte = new byte[9];
@@ -724,6 +818,54 @@ public class DeviceControlActivity extends Activity {
         newSettingStrings[2] = sumString;
         sumString = insertZero(toHEXString(sumString), 2);
         settingByte[8] = (byte) toValueInt(sumString);
+
+        return settingByte;
+    }
+
+    // 生成配置byte数组  new version
+    private byte[] generateNewSetting2() {
+        byte[] settingByte = new byte[15];
+        newSettingStrings = new String[9];
+        // id
+        String idString = deviceIdEditText.getText().toString().trim();
+        newSettingStrings[0] = idString;
+        idString = insertZero(toHEXString(idString), 8);
+        String[] idStrings = new String[]{(String) idString.subSequence(6, 8), (String) idString.subSequence(4, 6), (String) idString.subSequence(2, 4), (String) idString.subSequence(0, 2)};
+        for (int i = 0; i < idStrings.length; i++) {
+            settingByte[i] = (byte) toValueInt(idStrings[i]);
+        }
+
+        // time
+        String timeString = TimeHelper.dateToSecond();
+        newSettingStrings[1] = TimeHelper.secondToDate(timeString);
+        //String timeString="453302738";
+        timeString = insertZero(toHEXString(timeString), 8);
+        String[] timeStrings = new String[]{(String) timeString.subSequence(6, 8), (String) timeString.subSequence(4, 6), (String) timeString.subSequence(2, 4), (String) timeString.subSequence(0, 2)};
+        for (int i = 0; i < timeStrings.length; i++) {
+            settingByte[i + 4] = (byte) toValueInt(timeStrings[i]);
+        }
+        mobileTime.setText(TimeHelper.getMobileTime());
+
+        // sum
+        String sumString = deviceSumEditText.getText().toString().trim();
+        newSettingStrings[2] = sumString;
+        sumString = insertZero(toHEXString(sumString), 2);
+        settingByte[8] = (byte) toValueInt(sumString);
+
+        // advertising time
+        newSettingStrings[3] = advertising_time_start_1_EditText.getText().toString().trim();
+        newSettingStrings[4] = advertising_time_end_1_EditText.getText().toString().trim();
+        newSettingStrings[5] = advertising_time_start_2_EditText.getText().toString().trim();
+        newSettingStrings[6] = advertising_time_end_2_EditText.getText().toString().trim();
+        newSettingStrings[7] = advertising_time_start_3_EditText.getText().toString().trim();
+        newSettingStrings[8] = advertising_time_end_3_EditText.getText().toString().trim();
+
+        settingByte[9] = (byte) toValueInt(insertZero(toHEXString(newSettingStrings[3]), 2));
+        settingByte[10] = (byte) toValueInt(insertZero(toHEXString(newSettingStrings[4]), 2));
+        settingByte[11] = (byte) toValueInt(insertZero(toHEXString(newSettingStrings[5]), 2));
+        settingByte[12] = (byte) toValueInt(insertZero(toHEXString(newSettingStrings[6]), 2));
+        settingByte[13] = (byte) toValueInt(insertZero(toHEXString(newSettingStrings[7]), 2));
+        settingByte[14] = (byte) toValueInt(insertZero(toHEXString(newSettingStrings[8]), 2));
 
         return settingByte;
     }
