@@ -23,9 +23,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="com.zjut.bluetoothle.DeviceControlActivity"
-            android:windowSoftInputMode="adjustPan" />
+        <activity android:name="com.zjut.bluetoothle.DeviceControlActivity" />
 
         <service
             android:name="com.zjut.bluetoothle.BluetoothLeService"

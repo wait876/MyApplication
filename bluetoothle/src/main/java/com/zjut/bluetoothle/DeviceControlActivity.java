@@ -43,6 +43,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -453,28 +454,92 @@ public class DeviceControlActivity extends Activity {
         deviceTimeTextView = (TextView) this.findViewById(R.id.device_time);
         syncDataTextView = (TextView) this.findViewById(R.id.exerciseDataTextview);
 
-        advertising_time_start_1_EditText = (EditText) this.findViewById(R.id.editText_advertising_start_1);
-        advertising_time_start_2_EditText = (EditText) this.findViewById(R.id.editText_advertising_start_2);
-        advertising_time_start_3_EditText = (EditText) this.findViewById(R.id.editText_advertising_start_3);
-        advertising_time_end_1_EditText = (EditText) this.findViewById(R.id.editText_advertising_end_1);
-        advertising_time_end_2_EditText = (EditText) this.findViewById(R.id.editText_advertising_end_2);
-        advertising_time_end_3_EditText = (EditText) this.findViewById(R.id.editText_advertising_end_3);
+        advertising_time_start_1_EditText = (EditText) this.findViewById(R.id.editText_advertising_1_start);
+        advertising_time_end_1_EditText = (EditText) this.findViewById(R.id.editText_advertising_1_end);
+        advertising_time_start_2_EditText = (EditText) this.findViewById(R.id.editText_advertising_2_start);
+        advertising_time_end_2_EditText = (EditText) this.findViewById(R.id.editText_advertising_2_end);
+        advertising_time_start_3_EditText = (EditText) this.findViewById(R.id.editText_advertising_3_start);
+        advertising_time_end_3_EditText = (EditText) this.findViewById(R.id.editText_advertising_3_end);
         advertising_1_Layout = (LinearLayout) this.findViewById(R.id.layout_advertising_1);
         advertising_2_Layout = (LinearLayout) this.findViewById(R.id.layout_advertising_2);
         advertising_3_Layout = (LinearLayout) this.findViewById(R.id.layout_advertising_3);
 
-        /*advertising_time_start_1_EditText.setOnKeyListener(new View.OnKeyListener() {
+        deviceIdEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (KeyEvent.KEYCODE_ENTER == keyCode && event.getAction() == KeyEvent.ACTION_DOWN) {
-                    advertising_time_end_1_EditText.setFocusable(true);
-                    advertising_time_end_1_EditText.requestFocus();
-                    advertising_time_end_1_EditText.setFocusableInTouchMode(true);
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_NEXT || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                    deviceSumEditText.requestFocus();
                     return true;
                 }
                 return false;
             }
-        });*/
+        });
+
+        deviceSumEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_NEXT || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                    advertising_time_start_1_EditText.requestFocus();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        advertising_time_start_1_EditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_NEXT || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                    advertising_time_end_1_EditText.requestFocus();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        advertising_time_end_1_EditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_NEXT || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                    advertising_time_start_2_EditText.requestFocus();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        advertising_time_start_2_EditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_NEXT || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                    advertising_time_end_2_EditText.requestFocus();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        advertising_time_end_2_EditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_NEXT || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                    advertising_time_start_3_EditText.requestFocus();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        advertising_time_start_3_EditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_NEXT || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                    advertising_time_end_3_EditText.requestFocus();
+                    return true;
+                }
+                return false;
+            }
+        });
 
 
 
@@ -511,8 +576,9 @@ public class DeviceControlActivity extends Activity {
             public void onClick(View v) {
                 // TODO Auto-generated method stub
                 showRequestDialog(getResources().getString(R.string.reading_data));
-                mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("setting"));
                 operationType = READ_DEVICE;
+                mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("setting"));
+
                 //ShowToastShort("READing");
             }
         });
@@ -540,9 +606,9 @@ public class DeviceControlActivity extends Activity {
                                     } else {
                                         settings = generateNewSetting();
                                     }
-
-                                    mBluetoothLeService.myWriteCharacteristic(allCharacteristics.get("setting"), settings);
                                     operationType = SET_DEVICE;
+                                    mBluetoothLeService.myWriteCharacteristic(allCharacteristics.get("setting"), settings);
+
                                     //mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("setting"));
                                     //ShowToastShort("SUBMIT");
                                 }
@@ -559,8 +625,8 @@ public class DeviceControlActivity extends Activity {
             public void onClick(View v) {
                 // TODO Auto-generated method stub
                 showRequestDialog(getResources().getString(R.string.syncing));
-                mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("exerciseData"));
                 operationType = SYNC_DEVICE;
+                mBluetoothLeService.myReadCharacteristic(allCharacteristics.get("exerciseData"));
                 syncCounts = 0;
                 //syncHandler = new Handler();
                 //syncThread = new SyncThread();

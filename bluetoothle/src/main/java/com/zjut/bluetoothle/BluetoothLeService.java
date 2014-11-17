@@ -168,7 +168,6 @@ public class BluetoothLeService extends Service {
             if (action.equals(READ_ACTION)) {
                 byte[] readSetting = characteristic.getValue();
 
-
                 /* old version
                 String result = byteHelper(readSetting);
                 */
@@ -522,7 +521,7 @@ public class BluetoothLeService extends Service {
         return device_id + "_" + device_time + "_" + device_sum;
     }
 
-    // new version, add advertising time
+    // new version, add advertising time setting
     public String byteHelper2(byte[] values) {
         //String result=null;
         String[] strings = new String[15];
@@ -552,7 +551,7 @@ public class BluetoothLeService extends Service {
         return device_id + "_" + device_time + "_" + device_sum + "_" + start1 + "_" + end1 + "_" + start2 + "_" + end2 + "_" + start3 + "_" + end3;
     }
 
-    public String exerciseDataHelper(byte[] values) {
+    /*public String exerciseDataHelper(byte[] values) {
         String[] strings = new String[16];
         for (int i = 0; i < values.length; i++) {
             int temp = values[i];
@@ -574,7 +573,7 @@ public class BluetoothLeService extends Service {
             return "NULL";
         }
         return data_time + "_" + device_id + "_" + data_energy + "_" + counts1 + "_" + counts2 + "_" + counts3 + "_" + counts4;
-    }
+    }*/
 
     public ExerciseData getExerciseData(byte[] values) {
         String[] strings = new String[16];
