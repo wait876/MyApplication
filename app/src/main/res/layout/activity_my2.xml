@@ -48,5 +48,11 @@
             android:layout_height="wrap_content"
             android:text="SMS" />
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ActionBar"
+            android:id="@+id/button6" />
+
     </LinearLayout>
 </RelativeLayout>

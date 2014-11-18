@@ -30,6 +30,7 @@ public class MyActivity extends Activity implements View.OnClickListener {
     private Button contactsButton = null;
     private Button smsButton = null;
     private Cursor cursor = null;
+    private Button actionBarButton=null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +65,9 @@ public class MyActivity extends Activity implements View.OnClickListener {
         smsButton = (Button) this.findViewById(R.id.button5);
         smsButton.setOnClickListener(this);
 
+        actionBarButton=(Button)this.findViewById(R.id.button6);
+        actionBarButton.setOnClickListener(this);
+
     }
 
     @Override
@@ -79,9 +83,18 @@ public class MyActivity extends Activity implements View.OnClickListener {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id)
+        {
+            case R.id.action_1:
+                showToast("Action1");
+                break;
+            case R.id.action_settings:
+                showToast("action_settings");
+                break;
         }
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -99,8 +112,7 @@ public class MyActivity extends Activity implements View.OnClickListener {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.button2:
-                Intent iii = new Intent(Intent.ACTION_VIEW,
-                        Uri.parse("http://www.baidu.com"));
+                Intent iii = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.baidu.com"));
                 startActivity(iii);
                 break;
             case R.id.button3:
@@ -130,6 +142,12 @@ public class MyActivity extends Activity implements View.OnClickListener {
                 i.setType("vnd.android-dir/mms-sms");
                 startActivity(i);
                 break;
+
+            case R.id.button6:
+                if (getActionBar().isShowing())
+                    getActionBar().hide();
+                else
+                    getActionBar().show();
         }
     }
 
@@ -173,4 +191,9 @@ public class MyActivity extends Activity implements View.OnClickListener {
         super.onConfigurationChanged(newConfig);
 
     }*/
+
+    private void showToast(String string)
+    {
+        Toast.makeText(this, string,Toast.LENGTH_SHORT).show();
+    }
 }

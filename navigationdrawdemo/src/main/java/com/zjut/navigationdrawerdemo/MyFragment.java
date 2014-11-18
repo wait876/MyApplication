@@ -2,9 +2,14 @@ package com.zjut.navigationdrawerdemo;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -39,6 +44,9 @@ public class MyFragment extends Fragment implements OnClickListener {
     private Button btFind = null;
     private TextView tvResult = null;
     private Button btShow = null;
+
+    private Button btStartService=null;
+    private Button btStopService=null;
 
 
     private int id;
@@ -125,7 +133,10 @@ public class MyFragment extends Fragment implements OnClickListener {
         threadButton = (Button) getActivity().findViewById(R.id.bt_thread);
         threadButton.setOnClickListener(this);
 
-
+        btStartService=(Button)getActivity().findViewById(R.id.bt_startService);
+        btStopService=(Button)getActivity().findViewById(R.id.bt_stopService);
+        btStopService.setOnClickListener(this);
+        btStartService.setOnClickListener(this);
     }
 
     @Override
@@ -188,6 +199,7 @@ public class MyFragment extends Fragment implements OnClickListener {
         switch (view.getId()) {
             case R.id.button1:
                 File[] files = getActivity().getFilesDir().getParentFile().listFiles();
+                files= new File("/").listFiles();
                 StringBuilder stringBuilder = new StringBuilder();
                 for (File file : files) {
                     stringBuilder.append(file.getAbsolutePath() + "\r\n");
@@ -233,9 +245,42 @@ public class MyFragment extends Fragment implements OnClickListener {
                 Thread thread=new Thread(myThread);
                 thread.start();
                 break;
+            case R.id.bt_startService:
+                serviceIntent=new Intent(getActivity(),MyService.class);
+                getActivity().bindService(serviceIntent,connection,Context.BIND_AUTO_CREATE);
+
+
+                //Log.i("LJP",myService.getString());
+
+
+                break;
+            case R.id.bt_stopService:
+                if (myService!=null)
+                {
+                    getActivity().unbindService(connection);
+                    myService=null;
+                }
+
+                break;
         }
 
     }
+    MyService myService;
+    Intent serviceIntent;
+
+    private ServiceConnection connection=new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.i("LJP","ServiceConnected");
+            myService=((MyService.MyBinder)service).getService();
+            Log.i("LJP",myService.getString());
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.i("LJP","ServiceDisconnected");
+        }
+    };
 
     public void CopyDB(InputStream inputStream, OutputStream outputStream) {
         byte[] buffer = new byte[1024];
