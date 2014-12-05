@@ -28,14 +28,14 @@ public class SampleGattAttributes {
 
     static {
         // Sample Services.
-    	/*attributes.put("00001800-0000-1000-8000-00805f9b34fb", "Generic Access");
+        /*attributes.put("00001800-0000-1000-8000-00805f9b34fb", "Generic Access");
     	attributes.put("00001801-0000-1000-8000-00805f9b34fb", "Generic Attribute");
         attributes.put("0000180d-0000-1000-8000-00805f9b34fb", "Heart Rate Service");
         attributes.put("0000180a-0000-1000-8000-00805f9b34fb", "Device Information Service");
         attributes.put("0000180f-0000-1000-8000-00805f9b34fb", "Battery Service");
         attributes.put("000018f1-0000-1000-8000-00805f9b34fb", "Time Service");
         attributes.put("000018f2-0000-1000-8000-00805f9b34fb", "Exercise Data");*/
-        attributes.put("0000fff0-0000-1000-8000-00805f9b34fb", "Smart Exercise");
+        attributes.put("0000f000-0000-1000-8000-00805f9b34fb", "Smart Exercise");
         // Sample Characteristics.
         //attributes.put(HEART_RATE_MEASUREMENT, "Heart Rate Measurement");
         /*attributes.put("00002a00-0000-1000-8000-00805f9b34fb", "Device Name");
@@ -61,19 +61,19 @@ public class SampleGattAttributes {
         attributes.put("00002a29-0000-1000-8000-00805f9b34fb", "Manufacturer Name String");
         attributes.put("00002a2a-0000-1000-8000-00805f9b34fb", "Certification Data List");
         attributes.put("00002a50-0000-1000-8000-00805f9b34fb", "PnP ID");*/
-        attributes.put("0000fff1-0000-1000-8000-00805f9b34fb", "fff1");
-        attributes.put("0000fff2-0000-1000-8000-00805f9b34fb", "exerciseData");
-        attributes.put("0000fff3-0000-1000-8000-00805f9b34fb", "battery");
-        attributes.put("0000fff4-0000-1000-8000-00805f9b34fb", "setting");
+        attributes.put("0000f001-0000-1000-8000-00805f9b34fb", "fff1");
+        attributes.put("0000f002-0000-1000-8000-00805f9b34fb", "exerciseData");
+        attributes.put("0000f003-0000-1000-8000-00805f9b34fb", "battery");
+        attributes.put("0000f004-0000-1000-8000-00805f9b34fb", "setting");
     }
 
     public static String lookup(String uuid, String defaultName) {
         String name = attributes.get(uuid);
         return name == null ? defaultName : name;
     }
-    //是否存在特定的服务 
-    public static boolean existService(String uuid)
-    {
+
+    //是否存在特定的服务
+    public static boolean existService(String uuid) {
         String name = attributes.get(uuid);
         return name == null ? false : true;
     }
