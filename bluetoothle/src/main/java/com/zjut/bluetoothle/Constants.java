@@ -13,6 +13,7 @@ public class Constants {
 
     public static String[] mobiles = {"358240052841202", "864502021674965"};
     private final int test = 0;
+    private final int test2 = 0;
     // 10->16
     public static String toHEXString(String string) {
         String result = null;
